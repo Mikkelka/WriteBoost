@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Writing Tools is an Apple Intelligence-inspired desktop application that provides AI-powered writing assistance system-wide. This version has been simplified to focus on Windows/Linux with English language only. Users can proofread, rewrite, summarize, and perform custom text operations on any selected text across all applications using a global hotkey (default: Ctrl+Space).
+Writing Tools is an Apple Intelligence-inspired desktop application that provides AI-powered writing assistance system-wide. This version has been streamlined for Windows/Linux with English-only interface, Gemini AI integration, and simplified UI styling. Users can proofread, rewrite, summarize, and perform custom text operations on any selected text across all applications using a global hotkey (default: Ctrl+Space).
 
 ## Development Commands
 
@@ -19,11 +19,11 @@ cd Windows_and_Linux && python main.py
 
 ### Building Executable
 ```bash
-# Build with PyInstaller (from Windows_and_Linux directory)
+# Build with PyInstaller spec file (from Windows_and_Linux directory)
 cd Windows_and_Linux && python pyinstaller-build-script.py
 ```
 
-The build script creates a single-file executable with optimized exclusions for smaller size.
+The spec file creates a single-file executable with optimized exclusions and proper resource bundling.
 
 
 ## Architecture Overview
@@ -31,16 +31,15 @@ The build script creates a single-file executable with optimized exclusions for 
 ### Core Application Structure
 - **Entry Point**: `Windows_and_Linux/main.py` - Simple launcher that starts the Qt application
 - **Main Application**: `Windows_and_Linux/WritingToolApp.py` - QApplication-based system tray app with global hotkey listener
-- **AI Provider System**: `Windows_and_Linux/aiprovider.py` - Abstract provider interface with implementations for Gemini, OpenAI-compatible APIs, and Ollama
+- **AI Provider System**: `Windows_and_Linux/aiprovider.py` - Simple Gemini AI provider implementation
 
 ### UI Architecture
 The UI is modular with separate window classes in `Windows_and_Linux/ui/`:
 - `CustomPopupWindow.py` - Main command selection popup (appears on hotkey)
 - `ResponseWindow.py` - Chat-style window for Summary/Key Points/Table operations with markdown rendering
 - `SettingsWindow.py` - Provider configuration and app settings
-- `OnboardingWindow.py` - First-time setup wizard
-- `AboutWindow.py` - Application information
-- `UIUtils.py` - Common styling utilities and theme management
+- `OnboardingWindow.py` - Simplified first-time setup (hotkey configuration and Gemini API key)
+- `UIUtils.py` - Common styling utilities and simple background rendering
 
 ### Data Flow
 1. **Global hotkey detection** (pynput) → **Text capture** (clipboard) → **UI display** → **AI processing** → **Text replacement**
@@ -56,7 +55,7 @@ The UI is modular with separate window classes in `Windows_and_Linux/ui/`:
 - `open_in_window: true` operations show results in ResponseWindow with chat capability
 
 ### User Settings
-- `config.json` (created at runtime) - Stores API keys, provider settings, hotkeys, theme preferences
+- `config.json` (created at runtime) - Stores Gemini API key and hotkey settings
 - Settings are managed through the SettingsWindow UI
 
 ## Key Components
@@ -75,17 +74,22 @@ class AIProvider(ABC):
 ```
 
 Implementation:
-- `GeminiProvider` - Google's Gemini API (free option)
+- `GeminiProvider` - Google's Gemini API integration
 
 ### Text Processing Pipeline
 1. **Text Selection**: Captured via clipboard operations for universal compatibility
 2. **Command Selection**: CustomPopupWindow displays available operations
-3. **AI Processing**: Threaded execution prevents UI freezing
+3. **AI Processing**: Threaded execution prevents UI freezing via Gemini API
 4. **Result Handling**: Direct replacement or ResponseWindow display based on operation type
 
-### Theme System
-- Automatic dark/light mode detection via `darkdetect`
-- Two visual themes: gradient blur and plain Windows-style
+### Resource Management
+- **PyInstaller Compatibility**: Uses `get_resource_path()` function to locate bundled resources (icons, options.json)
+- **Runtime Resource Access**: Handles both development (file system) and compiled (temporary extraction) scenarios
+- **Icon System**: Theme-aware icon loading with `_dark.png` and `_light.png` variants
+
+### UI Styling
+- Simple solid color backgrounds for clean, minimal appearance
+- Dark mode optimized styling throughout the interface
 - Consistent styling through UIUtils across all windows
 
 ## Dependencies
@@ -94,7 +98,6 @@ Implementation:
 - **PySide6** - Qt GUI framework (main UI toolkit)
 - **pynput** - Global hotkey detection and keyboard simulation
 - **pyperclip** - Clipboard operations for text capture/replacement
-- **darkdetect** - System theme detection
 - **markdown2** - Markdown rendering in response windows
 
 ### AI Provider Dependencies
@@ -105,10 +108,7 @@ Implementation:
 
 ## Localization
 
-This version has been simplified to English-only:
-- English locale files in `Windows_and_Linux/locales/en/`
-- gettext system still in place but hardcoded to English
-- `create_translation.sh` is simplified and no longer needed for compilation
+This version is English-only with no localization system - all UI text is hardcoded in English for simplicity.
 
 ## Platform Considerations
 

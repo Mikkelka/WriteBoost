@@ -35,8 +35,7 @@ from abc import ABC, abstractmethod
 from typing import List
 
 # External libraries
-import google.generativeai as genai
-from google.generativeai.types import HarmBlockThreshold, HarmCategory
+from google import genai
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QVBoxLayout
 from ui.UIUtils import colorMode
@@ -241,25 +240,24 @@ class GeminiProvider(AIProvider):
     """
     Provider for Google's Gemini API.
     
-    Uses google.generativeai.GenerativeModel.generate_content() to generate text.
-    Streaming is no longer offered so we always do a single-shot call.
+    Uses the new google.genai.Client.models.generate_content() to generate text.
     """
     def __init__(self, app):
         self.close_requested = False
-        self.model = None
+        self.client = None
 
         settings = [
             TextSetting(name="api_key", display_name="API Key", description="Paste your Gemini API key here"),
             DropdownSetting(
                 name="model_name",
                 display_name="Model",
-                default_value="gemini-2.0-flash",
+                default_value="gemini-2.5-flash-preview-05-20",
                 description="Select Gemini model to use",
                 options=[
                     ("Gemini 2.0 Flash Lite (intelligent | very fast | 30 uses/min)", "gemini-2.0-flash-lite-preview-02-05"),
                     ("Gemini 2.0 Flash (very intelligent | fast | 15 uses/min)", "gemini-2.0-flash"),
                     ("Gemini 2.0 Flash Thinking (most intelligent | slow | 10 uses/min)", "gemini-2.0-flash-thinking-exp-01-21"),
-                    ("Gemini 2.0 Pro (most intelligent | slow | 2 uses/min)", "gemini-2.0-pro-exp-02-05"),
+                    ("Gemini 2.5 Flash (most intelligent | fast | 10 uses/min)", "gemini-2.5-flash-preview-05-20"),
                 ]
             )
         ]
@@ -280,17 +278,23 @@ class GeminiProvider(AIProvider):
         otherwise emits the text via the output_ready_signal.
         """
         logging.debug(f"Getting response - API key available: {hasattr(self, 'api_key') and bool(self.api_key)}")
-        logging.debug(f"Model initialized: {self.model is not None}")
+        logging.debug(f"Client initialized: {self.client is not None}")
         
         self.close_requested = False
 
-        # Single-shot call with streaming disabled
-        response = self.model.generate_content(
-            contents=[system_instruction, prompt],
-            stream=False
-        )
-
         try:
+            # Debug logging
+            logging.debug(f"Making API call with model: {self.model_name}")
+            logging.debug(f"System instruction length: {len(system_instruction)}")
+            logging.debug(f"Prompt length: {len(prompt)}")
+            
+            # Single-shot call using new Google genai client
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=f"{system_instruction}\n\n{prompt}"
+            )
+            
+            logging.debug("API call completed successfully")
             response_text = response.text.rstrip('\n')
             if not return_response and not hasattr(self.app, 'current_response_window'):
                 self.app.output_ready_signal.emit(response_text)
@@ -298,8 +302,26 @@ class GeminiProvider(AIProvider):
                 return ""
             return response_text
         except Exception as e:
-            logging.error(f"Error processing Gemini response: {e}")
-            self.app.output_ready_signal.emit("An error occurred while processing the response.")
+            # Log the full error for debugging
+            logging.error(f"Full Gemini API exception: {type(e).__name__}: {str(e)}")
+            if hasattr(e, 'response'):
+                logging.error(f"Response object: {e.response}")
+            
+            # Check for common error types and provide helpful messages
+            error_str = str(e)
+            if "quota" in error_str.lower() or "rate" in error_str.lower():
+                error_msg = "Rate limit exceeded. Please wait a moment and try again."
+            elif "safety" in error_str.lower() or "blocked" in error_str.lower():
+                error_msg = "Content was blocked by safety filters. Try rephrasing your request."
+            elif "not found" in error_str.lower() or "invalid" in error_str.lower():
+                error_msg = f"Model error. Please check your configuration. Details: {error_str}"
+            elif "authentication" in error_str.lower() or "api key" in error_str.lower():
+                error_msg = "Authentication failed. Please check your API key in settings."
+            else:
+                error_msg = f"Gemini API Error: {error_str}"
+            
+            logging.error(f"Processed error message: {error_msg}")
+            self.app.output_ready_signal.emit(error_msg)
         finally:
             self.close_requested = False
 
@@ -307,7 +329,7 @@ class GeminiProvider(AIProvider):
 
     def after_load(self):
         """
-        Configure the google.generativeai client and create the generative model.
+        Configure the Google genai client.
         """
         logging.debug(f"Configuring Gemini with API key: {'***' + str(getattr(self, 'api_key', 'NOT SET'))[-4:] if hasattr(self, 'api_key') and self.api_key else 'NOT SET'}")
         
@@ -315,24 +337,10 @@ class GeminiProvider(AIProvider):
             logging.error("No API key found in Gemini provider")
             return
             
-        genai.configure(api_key=self.api_key)
-        self.model = genai.GenerativeModel(
-            model_name=self.model_name,
-            generation_config=genai.types.GenerationConfig(
-                candidate_count=1,
-                max_output_tokens=1000,
-                temperature=0.5
-            ),
-            safety_settings={
-                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
-                HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
-                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
-                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
-            }
-        )
+        self.client = genai.Client(api_key=self.api_key)
 
     def before_load(self):
-        self.model = None
+        self.client = None
 
     def cancel(self):
         self.close_requested = True
