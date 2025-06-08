@@ -627,24 +627,24 @@ class WritingToolApp(QtWidgets.QApplication):
                 
                 logging.debug('Sending request to AI provider')
                 
-                # Format conversation for Gemini provider
-                # For Gemini, use the proper history format with roles
-                chat_messages = []
+                # Format conversation for new Google genai client
+                # Build conversation context from history
+                conversation_text = system_instruction + "\n\n"
                 
-                # Convert our roles to Gemini's expected roles
-                for msg in history:
-                    gemini_role = "model" if msg["role"] == "assistant" else "user"
-                    chat_messages.append({
-                        "role": gemini_role,
-                        "parts": msg["content"]
-                    })
+                for msg in history[:-1]:  # Exclude the current question
+                    if msg["role"] == "user":
+                        conversation_text += f"User: {msg['content']}\n\n"
+                    else:
+                        conversation_text += f"Assistant: {msg['content']}\n\n"
                 
-                # Start chat with history
-                chat = self.current_provider.model.start_chat(history=chat_messages)
+                conversation_text += f"User: {question}\n\nAssistant:"
                 
-                # Get response using the chat
-                response = chat.send_message(question)
-                response_text = response.text
+                # Use the provider's get_response method with return_response=True
+                response_text = self.current_provider.get_response(
+                    system_instruction="", 
+                    prompt=conversation_text,
+                    return_response=True
+                )
 
                 logging.debug(f'Got response of length: {len(response_text)}')
                 
