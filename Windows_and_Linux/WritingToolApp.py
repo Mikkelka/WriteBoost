@@ -20,6 +20,16 @@ import ui.SettingsWindow
 from aiprovider import GeminiProvider
 
 
+def get_resource_path(relative_path):
+    """Get absolute path to resource, works for dev and for PyInstaller"""
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except AttributeError:
+        base_path = os.path.dirname(sys.argv[0])
+    return os.path.join(base_path, relative_path)
+
+
 class WritingToolApp(QtWidgets.QApplication):
     """
     The main application class for Writing Tools.
@@ -123,7 +133,7 @@ class WritingToolApp(QtWidgets.QApplication):
         """
         Load the options file.
         """
-        self.options_path = os.path.join(os.path.dirname(sys.argv[0]), 'options.json')
+        self.options_path = get_resource_path('options.json')
         logging.debug(f'Loading options from {self.options_path}')
         if os.path.exists(self.options_path):
             with open(self.options_path, 'r') as f:
@@ -244,7 +254,7 @@ class WritingToolApp(QtWidgets.QApplication):
             self.popup_window = ui.CustomPopupWindow.CustomPopupWindow(self, selected_text)
 
             # Set the window icon
-            icon_path = os.path.join(os.path.dirname(sys.argv[0]), 'icons', 'app_icon.png')
+            icon_path = get_resource_path(os.path.join('icons', 'app_icon.png'))
             if os.path.exists(icon_path): self.setWindowIcon(QtGui.QIcon(icon_path))
             # Get the screen containing the cursor
             cursor_pos = QCursor.pos()
@@ -501,7 +511,7 @@ class WritingToolApp(QtWidgets.QApplication):
             return
 
         logging.debug('Creating system tray icon')
-        icon_path = os.path.join(os.path.dirname(sys.argv[0]), 'icons', 'app_icon.png')
+        icon_path = get_resource_path(os.path.join('icons', 'app_icon.png'))
         if not os.path.exists(icon_path):
             logging.warning(f'Tray icon not found at {icon_path}')
             # Use a default icon if not found

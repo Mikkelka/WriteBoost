@@ -1,0 +1,13 @@
+{
+    "shortcut": "ctrl+space",
+    "theme": "gradient",
+    "providers": {
+        "Gemini": {
+            "api_key": "AIzaSyC8wHizERCsxJ2InKaklekwGykjTjLsiPU",
+            "model_name": "gemini-2.0-flash"
+        }
+    },
+    "locale": "en",
+    "streaming": false,
+    "provider": "Gemini"
+}

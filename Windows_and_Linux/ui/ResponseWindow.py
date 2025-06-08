@@ -11,6 +11,16 @@ from ui.UIUtils import UIUtils, colorMode
 
 _ = lambda x: x
 
+
+def get_resource_path(relative_path):
+    """Get absolute path to resource, works for dev and for PyInstaller"""
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except AttributeError:
+        base_path = os.path.dirname(sys.argv[0])
+    return os.path.join(base_path, relative_path)
+
 class MarkdownTextBrowser(QtWidgets.QTextBrowser):
     """Enhanced text browser for displaying Markdown content with improved sizing"""
     
@@ -371,7 +381,7 @@ class ResponseWindow(QtWidgets.QWidget):
             
         for icon, tooltip, action in zoom_controls:
             btn = QtWidgets.QPushButton()
-            btn.setIcon(QtGui.QIcon(os.path.join(os.path.dirname(sys.argv[0]), 'icons', icon + ('_dark' if colorMode == 'dark' else '_light') + '.png')))
+            btn.setIcon(QtGui.QIcon(get_resource_path(os.path.join('icons', icon + ('_dark' if colorMode == 'dark' else '_light') + '.png'))))
             btn.setStyleSheet(self.get_button_style())
             btn.setToolTip(tooltip)
             btn.clicked.connect(action)
@@ -447,7 +457,7 @@ class ResponseWindow(QtWidgets.QWidget):
         bottom_bar.addWidget(self.input_field)
         
         send_button = QtWidgets.QPushButton()
-        send_button.setIcon(QtGui.QIcon(os.path.join(os.path.dirname(sys.argv[0]), 'icons', 'send' + ('_dark' if colorMode == 'dark' else '_light') + '.png')))
+        send_button.setIcon(QtGui.QIcon(get_resource_path(os.path.join('icons', 'send' + ('_dark' if colorMode == 'dark' else '_light') + '.png'))))
         send_button.setStyleSheet(f"""
             QPushButton {{
                 background-color: {'#2e7d32' if colorMode == 'dark' else '#4CAF50'};

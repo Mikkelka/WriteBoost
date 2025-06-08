@@ -1,3 +1,3 @@
 - Kald mig Mikkel
 - jeg er webudvikler og jeg ved ikke rigtig noget om det her sprog
-- den her command virker til at build exe: python -m PyInstaller --onefile --windowed --icon=icons/app_icon.ico --name="Writing Tools" main.py
+- den her command virker til at build exe: python pyinstaller-build-script.py

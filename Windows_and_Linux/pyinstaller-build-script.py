@@ -5,13 +5,19 @@ import sys
 
 def run_pyinstaller_build():
     pyinstaller_command = [
-        "pyinstaller",
+        "python", "-m", "PyInstaller",
         "--onefile",
         "--windowed",
         "--icon=icons/app_icon.ico",
         "--name=Writing Tools",
         "--clean",
         "--noconfirm",
+        "--add-data=options.json;.",
+        "--add-data=icons;icons",
+        "--add-data=background.png;.",
+        "--add-data=background_dark.png;.",
+        "--add-data=background_popup.png;.",
+        "--add-data=background_popup_dark.png;.",
         # Exclude unnecessary modules
         "--exclude-module", "tkinter",
         "--exclude-module", "unittest",
