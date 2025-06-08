@@ -78,21 +78,23 @@ class TextSetting(AIProviderSetting):
         self.input = None
 
     def render_to_layout(self, layout: QVBoxLayout):
-        row_layout = QtWidgets.QHBoxLayout()
+        # Label
         label = QtWidgets.QLabel(self.display_name)
-        label.setStyleSheet(f"font-size: 16px; color: {'#ffffff' if colorMode=='dark' else '#333333'};")
-        row_layout.addWidget(label)
+        label.setStyleSheet("font-size: 14px; color: #ffffff; margin-bottom: 4px;")
+        layout.addWidget(label)
+        
+        # Input field
         self.input = QtWidgets.QLineEdit(self.internal_value)
-        self.input.setStyleSheet(f"""
-            font-size: 16px;
-            padding: 5px;
-            background-color: {'#444' if colorMode=='dark' else 'white'};
-            color: {'#ffffff' if colorMode=='dark' else '#000000'};
-            border: 1px solid {'#666' if colorMode=='dark' else '#ccc'};
+        self.input.setStyleSheet("""
+            font-size: 14px;
+            padding: 8px;
+            background-color: #404040;
+            color: #ffffff;
+            border: 1px solid #606060;
+            border-radius: 4px;
         """)
         self.input.setPlaceholderText(self.description)
-        row_layout.addWidget(self.input)
-        layout.addLayout(row_layout)
+        layout.addWidget(self.input)
 
     def set_value(self, value):
         self.internal_value = value
@@ -113,25 +115,43 @@ class DropdownSetting(AIProviderSetting):
         self.dropdown = None
 
     def render_to_layout(self, layout: QVBoxLayout):
-        row_layout = QtWidgets.QHBoxLayout()
+        # Label
         label = QtWidgets.QLabel(self.display_name)
-        label.setStyleSheet(f"font-size: 16px; color: {'#ffffff' if colorMode=='dark' else '#333333'};")
-        row_layout.addWidget(label)
+        label.setStyleSheet("font-size: 14px; color: #ffffff; margin-bottom: 4px;")
+        layout.addWidget(label)
+        
+        # Dropdown
         self.dropdown = QtWidgets.QComboBox()
-        self.dropdown.setStyleSheet(f"""
-            font-size: 16px;
-            padding: 5px;
-            background-color: {'#444' if colorMode=='dark' else 'white'};
-            color: {'#ffffff' if colorMode=='dark' else '#000000'};
-            border: 1px solid {'#666' if colorMode=='dark' else '#ccc'};
+        self.dropdown.setStyleSheet("""
+            QComboBox {
+                font-size: 14px;
+                padding: 8px;
+                background-color: #404040;
+                color: #ffffff;
+                border: 1px solid #606060;
+                border-radius: 4px;
+            }
+            QComboBox::drop-down {
+                border: none;
+            }
+            QComboBox::down-arrow {
+                image: none;
+                border-left: 5px solid transparent;
+                border-right: 5px solid transparent;
+                border-top: 5px solid #ffffff;
+            }
+            QComboBox QAbstractItemView {
+                background-color: #404040;
+                color: #ffffff;
+                selection-background-color: #0078d7;
+            }
         """)
         for option, value in self.options:
             self.dropdown.addItem(option, value)
         index = self.dropdown.findData(self.internal_value)
         if index != -1:
             self.dropdown.setCurrentIndex(index)
-        row_layout.addWidget(self.dropdown)
-        layout.addLayout(row_layout)
+        layout.addWidget(self.dropdown)
 
     def set_value(self, value):
         self.internal_value = value

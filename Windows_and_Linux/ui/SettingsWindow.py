@@ -37,7 +37,7 @@ class SettingsWindow(QtWidgets.QWidget):
 
     def init_provider_ui(self, provider: AIProvider, layout):
         """
-        Initialize the user interface for the provider, including logo, name, description and all settings.
+        Initialize the user interface for the provider with compact dark styling.
         """
         if self.current_provider_layout:
             self.current_provider_layout.setParent(None)
@@ -45,94 +45,26 @@ class SettingsWindow(QtWidgets.QWidget):
             self.current_provider_layout.deleteLater()
 
         self.current_provider_layout = QtWidgets.QVBoxLayout()
+        self.current_provider_layout.setSpacing(8)
 
-        # Create a horizontal layout for the logo and provider name
-        provider_header_layout = QtWidgets.QHBoxLayout()
-        provider_header_layout.setSpacing(10)
-        provider_header_layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-
-        if provider.logo:
-            logo_path = os.path.join(os.path.dirname(sys.argv[0]), 'icons', f"provider_{provider.logo}.png")
-            if os.path.exists(logo_path):
-                targetPixmap = UIUtils.resize_and_round_image(QImage(logo_path), 30, 15)
-                logo_label = QtWidgets.QLabel()
-                logo_label.setPixmap(targetPixmap)
-                logo_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignVCenter)
-                provider_header_layout.addWidget(logo_label)
-
-        provider_name_label = QtWidgets.QLabel(provider.provider_name)
-        provider_name_label.setStyleSheet(f"font-size: 18px; font-weight: bold; color: {'#ffffff' if colorMode == 'dark' else '#333333'};")
-        provider_name_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignVCenter)
-        provider_header_layout.addWidget(provider_name_label)
-
-        self.current_provider_layout.addLayout(provider_header_layout)
-
-        if provider.description:
-            description_label = QtWidgets.QLabel(provider.description)
-            description_label.setStyleSheet(f"font-size: 16px; color: {'#ffffff' if colorMode == 'dark' else '#333333'}; text-align: center;")
-            description_label.setWordWrap(True)
-            self.current_provider_layout.addWidget(description_label)
-
-        if hasattr(provider, 'ollama_button_text'):
-            # Create container for buttons
-            button_layout = QtWidgets.QHBoxLayout()
-            
-            # Add Ollama setup button
-            ollama_button = QtWidgets.QPushButton(provider.ollama_button_text)
-            ollama_button.setStyleSheet(f"""
-                QPushButton {{
-                    background-color: {'#4CAF50' if colorMode == 'dark' else '#008CBA'};
+        # Simple API key button
+        if provider.button_text:
+            button = QtWidgets.QPushButton(provider.button_text)
+            button.setStyleSheet("""
+                QPushButton {
+                    background-color: #0078d7;
                     color: white;
-                    padding: 10px;
-                    font-size: 16px;
+                    padding: 8px 16px;
+                    font-size: 12px;
                     border: none;
-                    border-radius: 5px;
-                }}
-                QPushButton:hover {{
-                    background-color: {'#45a049' if colorMode == 'dark' else '#007095'};
-                }}
+                    border-radius: 4px;
+                }
+                QPushButton:hover {
+                    background-color: #106ebe;
+                }
             """)
-            ollama_button.clicked.connect(provider.ollama_button_action)
-            button_layout.addWidget(ollama_button)
-            
-            # Add original button
-            main_button = QtWidgets.QPushButton(provider.button_text)
-            main_button.setStyleSheet(f"""
-                QPushButton {{
-                    background-color: {'#4CAF50' if colorMode == 'dark' else '#008CBA'};
-                    color: white;
-                    padding: 10px;
-                    font-size: 16px;
-                    border: none;
-                    border-radius: 5px;
-                }}
-                QPushButton:hover {{
-                    background-color: {'#45a049' if colorMode == 'dark' else '#007095'};
-                }}
-            """)
-            main_button.clicked.connect(provider.button_action)
-            button_layout.addWidget(main_button)
-            
-            self.current_provider_layout.addLayout(button_layout)
-        else:
-            # Original single button logic
-            if provider.button_text:
-                button = QtWidgets.QPushButton(provider.button_text)
-                button.setStyleSheet(f"""
-                    QPushButton {{
-                        background-color: {'#4CAF50' if colorMode == 'dark' else '#008CBA'};
-                        color: white;
-                        padding: 10px;
-                        font-size: 16px;
-                        border: none;
-                        border-radius: 5px;
-                    }}
-                    QPushButton:hover {{
-                        background-color: {'#45a049' if colorMode == 'dark' else '#007095'};
-                    }}
-                """)
-                button.clicked.connect(provider.button_action)
-                self.current_provider_layout.addWidget(button, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
+            button.clicked.connect(provider.button_action)
+            self.current_provider_layout.addWidget(button, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
 
         # Initialize config if needed
         if "providers" not in self.app.config:
@@ -150,177 +82,103 @@ class SettingsWindow(QtWidgets.QWidget):
     def init_ui(self):
         """
         Initialize the user interface for the settings window.
-        Now includes a scroll area for better handling of content on smaller screens.
+        Compact dark design focused on essentials.
         """
         self.setWindowTitle(_('Settings'))
-        # Set the exact width we want (592px) as both minimum and default
-        self.setMinimumWidth(592)
-        self.setFixedWidth(592)  # This makes the width non-resizable
+        # Smaller, more compact window
+        self.setMinimumWidth(450)
+        self.setFixedWidth(450)
 
-        # Set up the main window layout with spacing for bottom elements
-        UIUtils.setup_window_and_layout(self)
-        main_layout = QtWidgets.QVBoxLayout(self.background)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setSpacing(10)  # Add spacing between scroll area and bottom elements
-
-        # Earlier scroll_area and scroll_content creation moved up
-        # Create scroll area
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
-        scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-
-        # Create scroll content widget
-        scroll_content = QtWidgets.QWidget()
-        scroll_content.setStyleSheet("background: transparent;")
-        
-        # Style the scroll area for transparency
-        scroll_area.setStyleSheet("""
-            QScrollArea {
-                background: transparent;
-                border: none;
-            }
-            QScrollArea > QWidget > QWidget {
-                background: transparent;
-            }
-            QScrollBar:vertical {
-                background-color: transparent;
-                width: 12px;
-                margin: 0px;
-            }
-            QScrollBar::handle:vertical {
-                background-color: rgba(128, 128, 128, 0.5);
-                min-height: 20px;
-                border-radius: 6px;
-                margin: 2px;
-            }
-            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
-                height: 0px;
+        # Dark background
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #2b2b2b;
+                color: #ffffff;
             }
         """)
 
-        # Create a widget to hold the scrollable content
-        scroll_content = QtWidgets.QWidget()
-        content_layout = QtWidgets.QVBoxLayout(scroll_content)
-        content_layout.setContentsMargins(30, 30, 30, 30)
-        content_layout.setSpacing(20)
+        # Set up the main layout without UIUtils background
+        main_layout = QtWidgets.QVBoxLayout(self)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(15)
 
+        # Title
         if not self.providers_only:
             title_label = QtWidgets.QLabel(_("Settings"))
-            title_label.setStyleSheet(f"font-size: 24px; font-weight: bold; color: {'#ffffff' if colorMode == 'dark' else '#333333'};")
-            content_layout.addWidget(title_label, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
+            title_label.setStyleSheet("font-size: 20px; font-weight: bold; color: #ffffff; margin-bottom: 10px;")
+            main_layout.addWidget(title_label, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
 
             # Add autostart checkbox for Windows compiled version
             if AutostartManager.get_startup_path():
                 self.autostart_checkbox = QtWidgets.QCheckBox(_("Start on Boot"))
-                self.autostart_checkbox.setStyleSheet(f"font-size: 16px; color: {'#ffffff' if colorMode == 'dark' else '#333333'};")
+                self.autostart_checkbox.setStyleSheet("font-size: 14px; color: #ffffff;")
                 self.autostart_checkbox.setChecked(AutostartManager.check_autostart())
                 self.autostart_checkbox.stateChanged.connect(self.toggle_autostart)
-                content_layout.addWidget(self.autostart_checkbox)
+                main_layout.addWidget(self.autostart_checkbox)
 
             # Add shortcut key input
             shortcut_label = QtWidgets.QLabel(_("Shortcut Key:"))
-            shortcut_label.setStyleSheet(f"font-size: 16px; color: {'#ffffff' if colorMode == 'dark' else '#333333'};")
-            content_layout.addWidget(shortcut_label)
+            shortcut_label.setStyleSheet("font-size: 14px; color: #ffffff; margin-top: 10px;")
+            main_layout.addWidget(shortcut_label)
 
             self.shortcut_input = QtWidgets.QLineEdit(self.app.config.get('shortcut', 'ctrl+space'))
-            self.shortcut_input.setStyleSheet(f"""
-                font-size: 16px;
-                padding: 5px;
-                background-color: {'#444' if colorMode == 'dark' else 'white'};
-                color: {'#ffffff' if colorMode == 'dark' else '#000000'};
-                border: 1px solid {'#666' if colorMode == 'dark' else '#ccc'};
+            self.shortcut_input.setStyleSheet("""
+                font-size: 14px;
+                padding: 8px;
+                background-color: #404040;
+                color: #ffffff;
+                border: 1px solid #606060;
+                border-radius: 4px;
             """)
-            content_layout.addWidget(self.shortcut_input)
+            main_layout.addWidget(self.shortcut_input)
 
-            # Add theme selection
-            theme_label = QtWidgets.QLabel(_("Background Theme:"))
-            theme_label.setStyleSheet(f"font-size: 16px; color: {'#ffffff' if colorMode == 'dark' else '#333333'};")
-            content_layout.addWidget(theme_label)
-
-            theme_layout = QHBoxLayout()
-            self.gradient_radio = QRadioButton(_("Blurry Gradient"))
-            self.plain_radio = QRadioButton(_("Plain"))
-            self.gradient_radio.setStyleSheet(f"color: {'#ffffff' if colorMode == 'dark' else '#333333'};")
-            self.plain_radio.setStyleSheet(f"color: {'#ffffff' if colorMode == 'dark' else '#333333'};")
-            current_theme = self.app.config.get('theme', 'gradient')
-            self.gradient_radio.setChecked(current_theme == 'gradient')
-            self.plain_radio.setChecked(current_theme == 'plain')
-            theme_layout.addWidget(self.gradient_radio)
-            theme_layout.addWidget(self.plain_radio)
-            content_layout.addLayout(theme_layout)
+        # Separator line
+        separator = QtWidgets.QFrame()
+        separator.setFrameShape(QtWidgets.QFrame.Shape.HLine)
+        separator.setStyleSheet("color: #505050;")
+        main_layout.addWidget(separator)
 
         # AI Provider section
-        provider_label = QtWidgets.QLabel(_("AI Provider:"))
-        provider_label.setStyleSheet(f"font-size: 16px; color: {'#ffffff' if colorMode == 'dark' else '#333333'};")
-        content_layout.addWidget(provider_label)
-
-        # Add horizontal separator
-        line = QtWidgets.QFrame()
-        line.setFrameShape(QtWidgets.QFrame.Shape.HLine)
-        line.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
-        content_layout.addWidget(line)
+        provider_label = QtWidgets.QLabel(_("Gemini AI"))
+        provider_label.setStyleSheet("font-size: 16px; font-weight: bold; color: #ffffff; margin-top: 10px;")
+        main_layout.addWidget(provider_label)
 
         # Create container for provider UI
         self.provider_container = QtWidgets.QVBoxLayout()
-        content_layout.addLayout(self.provider_container)
+        main_layout.addLayout(self.provider_container)
 
         # Initialize Gemini provider UI
         provider_instance = self.app.providers[0]  # Only Gemini provider
         self.init_provider_ui(provider_instance, self.provider_container)
 
-        # Add horizontal separator
-        line = QtWidgets.QFrame()
-        line.setFrameShape(QtWidgets.QFrame.Shape.HLine)
-        line.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
-        content_layout.addWidget(line)
-
-        # Set up scroll area with content
-        scroll_area.setWidget(scroll_content)
-        main_layout.addWidget(scroll_area)
-
-        # Create bottom container for save button and restart notice
-        bottom_container = QtWidgets.QWidget()
-        bottom_container.setStyleSheet("background: transparent;")  # Ensure transparency
-        bottom_layout = QtWidgets.QVBoxLayout(bottom_container)
-        bottom_layout.setContentsMargins(30, 0, 30, 30)  # Match content margins except top
-        bottom_layout.setSpacing(10)
-
-        # Add save button to bottom container
+        # Save button
         save_button = QtWidgets.QPushButton(_("Finish AI Setup") if self.providers_only else _("Save"))
         save_button.setStyleSheet("""
             QPushButton {
                 background-color: #4CAF50;
                 color: white;
-                padding: 10px;
-                font-size: 16px;
+                padding: 12px;
+                font-size: 14px;
+                font-weight: bold;
                 border: none;
-                border-radius: 5px;
+                border-radius: 6px;
+                margin-top: 20px;
             }
             QPushButton:hover {
                 background-color: #45a049;
             }
         """)
         save_button.clicked.connect(self.save_settings)
-        bottom_layout.addWidget(save_button)
+        main_layout.addWidget(save_button)
 
         if not self.providers_only:
-            restart_text = "<p style='text-align: center;'>" + \
-            _("Please restart Writing Tools for changes to take effect.") + \
-            "</p>"
+            restart_notice = QtWidgets.QLabel(_("Restart required for changes to take effect"))
+            restart_notice.setStyleSheet("font-size: 12px; color: #999999; margin-top: 8px;")
+            restart_notice.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+            main_layout.addWidget(restart_notice)
 
-            restart_notice = QtWidgets.QLabel(restart_text)
-            restart_notice.setStyleSheet(f"font-size: 15px; color: {'#cccccc' if colorMode == 'dark' else '#555555'}; font-style: italic;")
-            restart_notice.setWordWrap(True)
-            bottom_layout.addWidget(restart_notice)
-
-        main_layout.addWidget(bottom_container)
-
-        # Set appropriate window height based on screen size
-        screen = QtWidgets.QApplication.primaryScreen().geometry()
-        max_height = int(screen.height() * 0.85)  # 85% of screen height
-        desired_height = min(720, max_height)  # Cap at 720px or 85% of screen height
-        self.resize(592, desired_height)  # Use an exact width of 592px so stuff looks good!
+        # Compact window size
+        self.resize(450, 380)
 
     @staticmethod
     def toggle_autostart(state):
@@ -333,7 +191,7 @@ class SettingsWindow(QtWidgets.QWidget):
 
         if not self.providers_only:
             self.app.config['shortcut'] = self.shortcut_input.text()
-            self.app.config['theme'] = 'gradient' if self.gradient_radio.isChecked() else 'plain'
+            self.app.config['theme'] = 'plain'  # Force dark theme
         else:
             self.app.create_tray_icon()
 
