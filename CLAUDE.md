@@ -74,10 +74,8 @@ class AIProvider(ABC):
     def save_settings(self, widget: QWidget)
 ```
 
-Three implementations:
-- `GeminiProvider` - Google's Gemini API (recommended free option)
-- `OpenAICompatibleProvider` - Any OpenAI-compatible API (ChatGPT, local servers)
-- `OllamaProvider` - Dedicated Ollama integration for local LLMs
+Implementation:
+- `GeminiProvider` - Google's Gemini API (free option)
 
 ### Text Processing Pipeline
 1. **Text Selection**: Captured via clipboard operations for universal compatibility
@@ -101,8 +99,6 @@ Three implementations:
 
 ### AI Provider Dependencies
 - **google-generativeai** - Gemini API client
-- **openai** - OpenAI-compatible API client
-- **ollama** - Local LLM server integration
 
 ### Build Dependencies
 - **pyinstaller** - Executable creation

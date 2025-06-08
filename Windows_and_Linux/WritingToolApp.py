@@ -20,7 +20,7 @@ import ui.CustomPopupWindow
 import ui.OnboardingWindow
 import ui.ResponseWindow
 import ui.SettingsWindow
-from aiprovider import GeminiProvider, OllamaProvider, OpenAICompatibleProvider
+from aiprovider import GeminiProvider
 from update_checker import UpdateChecker
 
 _ = gettext.gettext
@@ -69,7 +69,7 @@ class WritingToolApp(QtWidgets.QApplication):
         self.setup_ctrl_c_listener()
 
         # Setup available AI providers
-        self.providers = [GeminiProvider(self), OpenAICompatibleProvider(self), OllamaProvider(self)]
+        self.providers = [GeminiProvider(self)]
 
         if not self.config:
             logging.debug('No config found, showing onboarding')
@@ -79,13 +79,16 @@ class WritingToolApp(QtWidgets.QApplication):
 
             # Initialize the current provider, defaulting to Gemini
             provider_name = self.config.get('provider', 'Gemini')
+            logging.debug(f'Provider name from config: {provider_name}')
 
             self.current_provider = next((provider for provider in self.providers if provider.provider_name == provider_name), None)
             if not self.current_provider:
                 logging.warning(f'Provider {provider_name} not found. Using default provider.')
                 self.current_provider = self.providers[0]
 
-            self.current_provider.load_config(self.config.get("providers", {}).get(provider_name, {}))
+            provider_config = self.config.get("providers", {}).get(provider_name, {})
+            logging.debug(f'Loading provider config: {provider_config}')
+            self.current_provider.load_config(provider_config)
 
             self.create_tray_icon()
             self.register_hotkey()
@@ -662,7 +665,7 @@ class WritingToolApp(QtWidgets.QApplication):
         response_window: The ResponseWindow instance managing the chat UI
         question: The follow-up question from the user
 
-    This implementation is a bit convoluted, but it allows us to manage chat history & model roles across both providers! :3
+    This implementation manages chat history & model roles for the Gemini provider.
     """
 
     def process_followup_question(self, response_window, question):
@@ -693,59 +696,24 @@ class WritingToolApp(QtWidgets.QApplication):
                 
                 logging.debug('Sending request to AI provider')
                 
-                # Format conversation differently based on provider
-                if isinstance(self.current_provider, GeminiProvider):
-                    # For Gemini, use the proper history format with roles
-                    chat_messages = []
-                    
-                    # Convert our roles to Gemini's expected roles
-                    for msg in history:
-                        gemini_role = "model" if msg["role"] == "assistant" else "user"
-                        chat_messages.append({
-                            "role": gemini_role,
-                            "parts": msg["content"]
-                        })
-                    
-                    # Start chat with history
-                    chat = self.current_provider.model.start_chat(history=chat_messages)
-                    
-                    # Get response using the chat
-                    response = chat.send_message(question)
-                    response_text = response.text
-
-                elif isinstance(self.current_provider, OllamaProvider):  #
-                    # For Ollama, prepare messages with system instruction and history
-                    messages = [{"role": "system", "content": system_instruction}]
-
-                    for msg in history:
-                        messages.append({
-                            "role": msg["role"],
-                            "content": msg["content"]
-                        })
-
-                    # Get response from Ollama
-                    response_text = self.current_provider.get_response(
-                        system_instruction,
-                        messages,
-                        return_response=True
-                    )
-
-                else:
-                    # For OpenAI/compatible providers, prepare messages array, add system message
-                    messages = [{"role": "system", "content": system_instruction}]
-
-                    # Add history messages (including latest question)
-                    for msg in history:
-                        # Convert 'assistant' role to 'assistant' for OpenAI
-                        role = "assistant" if msg["role"] == "assistant" else "user"
-                        messages.append({"role": role, "content": msg["content"]})
-                    
-                    # Get response by passing the full messages array
-                    response_text = self.current_provider.get_response(
-                        system_instruction,
-                        messages,  # Pass messages array directly
-                        return_response=True
-                    )
+                # Format conversation for Gemini provider
+                # For Gemini, use the proper history format with roles
+                chat_messages = []
+                
+                # Convert our roles to Gemini's expected roles
+                for msg in history:
+                    gemini_role = "model" if msg["role"] == "assistant" else "user"
+                    chat_messages.append({
+                        "role": gemini_role,
+                        "parts": msg["content"]
+                    })
+                
+                # Start chat with history
+                chat = self.current_provider.model.start_chat(history=chat_messages)
+                
+                # Get response using the chat
+                response = chat.send_message(question)
+                response_text = response.text
 
                 logging.debug(f'Got response of length: {len(response_text)}')
                 

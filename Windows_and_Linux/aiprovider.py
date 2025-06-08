@@ -2,8 +2,8 @@
 AI Provider Architecture for Writing Tools
 --------------------------------------------
 
-This module handles different AI model providers (Gemini, OpenAI-compatible, Ollama) and manages their interactions
-with the main application. It uses an abstract base class pattern for provider implementations.
+This module handles the Gemini AI provider and manages its interaction with the main application.
+It uses an abstract base class pattern for provider implementations.
 
 Key Components:
 1. AIProviderSetting – Base class for provider settings (e.g. API keys, model names)
@@ -16,14 +16,12 @@ Key Components:
       • Loading and saving configuration settings
       • Cancelling an ongoing request
 
-3. Provider Implementations:
+3. Provider Implementation:
     • GeminiProvider – Uses Google’s Generative AI API (Gemini) to generate content.
-    • OpenAICompatibleProvider – Connects to any OpenAI-compatible API (v1/chat/completions)
-    • OllamaProvider – Connects to a locally running Ollama server (e.g. for llama.cpp)
 
 Response Flow:
    • The main app calls get_response() with a system instruction and a prompt.
-   • The provider formats and sends the request to its API endpoint.
+   • The provider formats and sends the request to the Gemini API.
    • For operations that require a window (e.g. Summary, Key Points), the provider returns the full text.
    • For direct text replacement, the provider emits the full text via the output_ready_signal.
    • Conversation history (for follow-up questions) is maintained by the main app.
@@ -39,8 +37,6 @@ from typing import List
 # External libraries
 import google.generativeai as genai
 from google.generativeai.types import HarmBlockThreshold, HarmCategory
-from ollama import Client as OllamaClient
-from openai import OpenAI
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QVBoxLayout
 from ui.UIUtils import colorMode
@@ -178,12 +174,15 @@ class AIProvider(ABC):
         """
         Load configuration settings into the provider.
         """
+        logging.debug(f"Loading config for provider: {config}")
         for setting in self.settings:
             if setting.name in config:
                 setattr(self, setting.name, config[setting.name])
                 setting.set_value(config[setting.name])
+                logging.debug(f"Set {setting.name} to: {'***' + str(config[setting.name])[-4:] if setting.name == 'api_key' else config[setting.name]}")
             else:
                 setattr(self, setting.name, setting.default_value)
+                logging.debug(f"Set {setting.name} to default: {setting.default_value}")
         self.after_load()
 
     def save_config(self):
@@ -244,7 +243,7 @@ class GeminiProvider(AIProvider):
                 ]
             )
         ]
-        super().__init__(app, "Gemini (Recommended)", settings,
+        super().__init__(app, "Gemini", settings,
             "• Google’s Gemini is a powerful AI model available for free!\n"
             "• An API key is required to connect to Gemini on your behalf.\n"
             "• Click the button below to get your API key.",
@@ -260,6 +259,9 @@ class GeminiProvider(AIProvider):
         Returns the full response text if return_response is True,
         otherwise emits the text via the output_ready_signal.
         """
+        logging.debug(f"Getting response - API key available: {hasattr(self, 'api_key') and bool(self.api_key)}")
+        logging.debug(f"Model initialized: {self.model is not None}")
+        
         self.close_requested = False
 
         # Single-shot call with streaming disabled
@@ -287,6 +289,12 @@ class GeminiProvider(AIProvider):
         """
         Configure the google.generativeai client and create the generative model.
         """
+        logging.debug(f"Configuring Gemini with API key: {'***' + str(getattr(self, 'api_key', 'NOT SET'))[-4:] if hasattr(self, 'api_key') and self.api_key else 'NOT SET'}")
+        
+        if not hasattr(self, 'api_key') or not self.api_key:
+            logging.error("No API key found in Gemini provider")
+            return
+            
         genai.configure(api_key=self.api_key)
         self.model = genai.GenerativeModel(
             model_name=self.model_name,
@@ -309,144 +317,3 @@ class GeminiProvider(AIProvider):
     def cancel(self):
         self.close_requested = True
 
-
-class OpenAICompatibleProvider(AIProvider):
-    """
-    Provider for OpenAI-compatible APIs.
-    
-    Uses self.client.chat.completions.create() to obtain a response.
-    Streaming is fully removed.
-    """
-    def __init__(self, app):
-        self.close_requested = None
-        self.client = None
-
-        settings = [
-            TextSetting(name="api_key", display_name="API Key", description="API key for the OpenAI-compatible API."),
-            TextSetting("api_base", "API Base URL", "https://api.openai.com/v1", "E.g. https://api.openai.com/v1"),
-            TextSetting("api_organisation", "API Organisation", "", "Leave blank if not applicable."),
-            TextSetting("api_project", "API Project", "", "Leave blank if not applicable."),
-            TextSetting("api_model", "API Model", "gpt-4o-mini", "E.g. gpt-4o-mini"),
-        ]
-        super().__init__(app, "OpenAI Compatible (For Experts)", settings,
-            "• Connect to ANY OpenAI-compatible API (v1/chat/completions).\n"
-            "• You must abide by the service's Terms of Service.",
-            "openai", "Get OpenAI API Key", lambda: webbrowser.open("https://platform.openai.com/account/api-keys"))
-
-    def get_response(self, system_instruction: str, prompt: str | list, return_response: bool = False) -> str:
-        """
-        Send a chat request to the OpenAI-compatible API.
-        
-        Always performs a non-streaming request.
-        If prompt is not a list, builds a simple two-message conversation.
-        Returns the response text if return_response is True,
-        otherwise emits it via output_ready_signal.
-        """
-        self.close_requested = False
-
-        if isinstance(prompt, list):
-            messages = prompt
-        else:
-            messages = [
-                {"role": "system", "content": system_instruction},
-                {"role": "user", "content": prompt}
-            ]
-
-        try:
-            response = self.client.chat.completions.create(
-                model=self.api_model,
-                messages=messages,
-                temperature=0.5,
-                stream=False
-            )
-            response_text = response.choices[0].message.content.strip()
-
-            if not return_response and not hasattr(self.app, 'current_response_window'):
-                self.app.output_ready_signal.emit(response_text)
-            return response_text
-
-        except Exception as e:
-            error_str = str(e)
-            logging.error(f"Error while generating content: {error_str}")
-            if "exceeded" in error_str or "rate limit" in error_str:
-                self.app.show_message_signal.emit(
-                    "Rate Limit Hit",
-                    "It appears you have hit an API rate/usage limit. Please try again later or adjust your settings."
-                )
-            else:
-                self.app.show_message_signal.emit("Error", f"An error occurred: {error_str}")
-            return ""
-
-    def after_load(self):
-        self.client = OpenAI(
-            api_key=self.api_key,
-            base_url=self.api_base,
-            organization=self.api_organisation,
-            project=self.api_project
-        )
-
-    def before_load(self):
-        self.client = None
-
-    def cancel(self):
-        self.close_requested = True
-
-
-class OllamaProvider(AIProvider):
-    """
-    Provider for connecting to an Ollama server.
-    
-    Uses the /chat endpoint of the Ollama server to generate a response.
-    Streaming is not used.
-    """
-    def __init__(self, app):
-        self.close_requested = None
-        self.client = None
-        self.app = app
-        settings = [
-            TextSetting("api_base", "API Base URL", "http://localhost:11434", "E.g. http://localhost:11434"),
-            TextSetting("api_model", "API Model", "llama3.1:8b", "E.g. llama3.1:8b"),
-            TextSetting("keep_alive", "Time to keep the model loaded in memory in minutes", "5", "E.g. 5")
-        ]
-        super().__init__(app, "Ollama (For Experts)", settings,
-            "• Connect to an Ollama server (local LLM).",
-            "ollama", "Ollama Set-up Instructions",
-            lambda: webbrowser.open("https://github.com/theJayTea/WritingTools?tab=readme-ov-file#-optional-ollama-local-llm-instructions-for-windows-v7-onwards"))
-
-    def get_response(self, system_instruction: str, prompt: str | list, return_response: bool = False) -> str:
-        """
-        Send a chat request to the Ollama server.
-        
-        Always performs a non-streaming request.
-        Returns the response text if return_response is True,
-        otherwise emits it via output_ready_signal.
-        """
-        self.close_requested = False
-
-        if isinstance(prompt, list):
-            messages = prompt
-        else:
-            messages = [
-                {"role": "system", "content": system_instruction},
-                {"role": "user", "content": prompt}
-            ]
-
-        try:
-            response = self.client.chat(model=self.api_model, messages=messages)
-            response_text = response['message']['content'].strip()
-            if not return_response and not hasattr(self.app, 'current_response_window'):
-                self.app.output_ready_signal.emit(response_text)
-            return response_text
-        except Exception as e:
-            logging.error(f"Error during Ollama chat: {e}")
-            self.app.output_ready_signal.emit("An error occurred during Ollama chat.")
-            return ""
-
-    def after_load(self):
-        self.client = OllamaClient(host=self.api_base)
-
-    def before_load(self):
-        self.client = None
-
-    def cancel(self):
-        self.close_requested = True

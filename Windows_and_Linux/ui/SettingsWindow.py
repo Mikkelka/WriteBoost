@@ -25,7 +25,6 @@ class SettingsWindow(QtWidgets.QWidget):
         self.providers_only = providers_only
         self.gradient_radio = None
         self.plain_radio = None
-        self.provider_dropdown = None
         self.provider_container = None
         self.autostart_checkbox = None
         self.shortcut_input = None
@@ -251,26 +250,10 @@ class SettingsWindow(QtWidgets.QWidget):
             theme_layout.addWidget(self.plain_radio)
             content_layout.addLayout(theme_layout)
 
-        # Add provider selection
-        provider_label = QtWidgets.QLabel(_("Choose AI Provider:"))
+        # AI Provider section
+        provider_label = QtWidgets.QLabel(_("AI Provider:"))
         provider_label.setStyleSheet(f"font-size: 16px; color: {'#ffffff' if colorMode == 'dark' else '#333333'};")
         content_layout.addWidget(provider_label)
-
-        self.provider_dropdown = QtWidgets.QComboBox()
-        self.provider_dropdown.setStyleSheet(f"""
-            font-size: 16px;
-            padding: 5px;
-            background-color: {'#444' if colorMode == 'dark' else 'white'};
-            color: {'#ffffff' if colorMode == 'dark' else '#000000'};
-            border: 1px solid {'#666' if colorMode == 'dark' else '#ccc'};
-        """)
-        self.provider_dropdown.setInsertPolicy(QtWidgets.QComboBox.InsertPolicy.NoInsert)
-
-        current_provider = self.app.config.get('provider', self.app.providers[0].provider_name)
-        for provider in self.app.providers:
-            self.provider_dropdown.addItem(provider.provider_name)
-        self.provider_dropdown.setCurrentIndex(self.provider_dropdown.findText(current_provider))
-        content_layout.addWidget(self.provider_dropdown)
 
         # Add horizontal separator
         line = QtWidgets.QFrame()
@@ -282,14 +265,9 @@ class SettingsWindow(QtWidgets.QWidget):
         self.provider_container = QtWidgets.QVBoxLayout()
         content_layout.addLayout(self.provider_container)
 
-        # Initialize provider UI
-        provider_instance = self.app.providers[self.provider_dropdown.currentIndex()]
+        # Initialize Gemini provider UI
+        provider_instance = self.app.providers[0]  # Only Gemini provider
         self.init_provider_ui(provider_instance, self.provider_container)
-
-        # Connect provider dropdown
-        self.provider_dropdown.currentIndexChanged.connect(
-            lambda: self.init_provider_ui(self.app.providers[self.provider_dropdown.currentIndex()], self.provider_container)
-        )
 
         # Add horizontal separator
         line = QtWidgets.QFrame()
@@ -360,18 +338,14 @@ class SettingsWindow(QtWidgets.QWidget):
             self.app.create_tray_icon()
 
         self.app.config['streaming'] = False
-        self.app.config['provider'] = self.provider_dropdown.currentText()
+        self.app.config['provider'] = 'Gemini'
 
-        self.app.providers[self.provider_dropdown.currentIndex()].save_config()
+        self.app.providers[0].save_config()  # Only Gemini provider
 
-        provider_name = self.app.config.get('provider', 'Gemini')
-        self.app.current_provider = next(
-            (provider for provider in self.app.providers if provider.provider_name == provider_name),
-            self.app.providers[0]
-        )
+        self.app.current_provider = self.app.providers[0]  # Only Gemini provider
 
         self.app.current_provider.load_config(
-            self.app.config.get("providers", {}).get(provider_name, {})
+            self.app.config.get("providers", {}).get('Gemini', {})
         )
 
         self.app.register_hotkey()
