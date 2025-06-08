@@ -1,4 +1,3 @@
-import gettext
 import json
 import logging
 import os
@@ -7,11 +6,10 @@ import sys
 import threading
 import time
 
-import darkdetect
 import pyperclip
 from pynput import keyboard as pykeyboard
 from PySide6 import QtCore, QtGui, QtWidgets
-from PySide6.QtCore import QLocale, Signal, Slot
+from PySide6.QtCore import Signal, Slot
 from PySide6.QtGui import QCursor, QGuiApplication
 from PySide6.QtWidgets import QApplication, QMessageBox
 
@@ -20,8 +18,6 @@ import ui.OnboardingWindow
 import ui.ResponseWindow
 import ui.SettingsWindow
 from aiprovider import GeminiProvider
-
-_ = gettext.gettext
 
 
 class WritingToolApp(QtWidgets.QApplication):
@@ -56,10 +52,6 @@ class WritingToolApp(QtWidgets.QApplication):
         self.output_queue = ""
         self.last_replace = 0
         self.hotkey_listener = None
-        self.paused = False
-        self.toggle_action = None
-
-        self._ = gettext.gettext
 
         # Initialize the ctrl+c hotkey listener
         self.ctrl_c_timer = None
@@ -90,48 +82,11 @@ class WritingToolApp(QtWidgets.QApplication):
             self.create_tray_icon()
             self.register_hotkey()
 
-            try:
-                lang = self.config['locale']
-            except KeyError:
-                lang = None
-            self.change_language(lang)
 
         self.recent_triggers = []  # Track recent hotkey triggers
         self.TRIGGER_WINDOW = 1.5  # Time window in seconds
         self.MAX_TRIGGERS = 3  # Max allowed triggers in window
 
-    def setup_translations(self, lang=None):
-        # English-only version
-        lang = 'en'
-
-        try:
-            translation = gettext.translation(
-                'messages',
-                localedir=os.path.join(os.path.dirname(__file__), 'locales'),
-                languages=[lang]
-            )
-        except FileNotFoundError:
-            translation = gettext.NullTranslations()
-
-        translation.install()
-        # Update the translation function for all UI components.
-        self._ = translation.gettext
-        ui.SettingsWindow._ = self._
-        ui.ResponseWindow._ = self._
-        ui.OnboardingWindow._ = self._
-        ui.CustomPopupWindow._ = self._
-
-    def retranslate_ui(self):
-        self.update_tray_menu()
-
-    def change_language(self, lang):
-        self.setup_translations(lang)
-        self.retranslate_ui()
-
-        # Update all other windows
-        for widget in QApplication.topLevelWidgets():
-            if widget != self and hasattr(widget, 'retranslate_ui'):
-                widget.retranslate_ui()
 
     def check_trigger_spam(self):
         """
@@ -209,8 +164,6 @@ class WritingToolApp(QtWidgets.QApplication):
                 self.hotkey_listener.stop()
 
             def on_activate():
-                if self.paused:
-                    return
                 logging.debug('triggered hotkey')
                 self.hotkey_triggered_signal.emit()  # Emit the signal when hotkey is pressed
 
@@ -575,43 +528,23 @@ class WritingToolApp(QtWidgets.QApplication):
         self.apply_dark_mode_styles(self.tray_menu)
 
         # Settings menu item
-        settings_action = self.tray_menu.addAction(self._('Settings'))
+        settings_action = self.tray_menu.addAction('Settings')
         settings_action.triggered.connect(self.show_settings)
 
-        # Pause/Resume toggle action 
-        self.toggle_action = self.tray_menu.addAction(self._('Resume') if self.paused else self._('Pause'))
-        self.toggle_action.triggered.connect(self.toggle_paused)
-
         # Exit menu item
-        exit_action = self.tray_menu.addAction(self._('Exit'))
+        exit_action = self.tray_menu.addAction('Exit')
         exit_action.triggered.connect(self.exit_app)
         
-    def toggle_paused(self):
-        """Toggle the paused state of the application."""
-        logging.debug('Toggle paused state')
-        self.paused = not self.paused
-        self.toggle_action.setText(self._('Resume') if self.paused else self._('Pause'))
-        logging.debug('App is paused' if self.paused else 'App is resumed')
 
     @staticmethod
     def apply_dark_mode_styles(menu):
         """
-        Apply styles to the tray menu based on system theme using darkdetect.
+        Apply dark styles to the tray menu.
         """
-        is_dark_mode = darkdetect.isDark()
         palette = menu.palette()
-
-        if is_dark_mode:
-            logging.debug('Tray icon dark')
-            # Dark mode colors
-            palette.setColor(QtGui.QPalette.Window, QtGui.QColor("#2d2d2d"))  # Dark background
-            palette.setColor(QtGui.QPalette.WindowText, QtGui.QColor("#ffffff"))  # White text
-        else:
-            logging.debug('Tray icon light')
-            # Light mode colors
-            palette.setColor(QtGui.QPalette.Window, QtGui.QColor("#ffffff"))  # Light background
-            palette.setColor(QtGui.QPalette.WindowText, QtGui.QColor("#000000"))  # Black text
-
+        # Always use dark mode
+        palette.setColor(QtGui.QPalette.Window, QtGui.QColor("#2d2d2d"))  # Dark background
+        palette.setColor(QtGui.QPalette.WindowText, QtGui.QColor("#ffffff"))  # White text
         menu.setPalette(palette)
 
 

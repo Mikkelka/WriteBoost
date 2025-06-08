@@ -3,13 +3,9 @@ import sys
 
 from aiprovider import AIProvider
 from PySide6 import QtCore, QtWidgets
-from PySide6.QtGui import QImage
-from PySide6.QtWidgets import QHBoxLayout, QRadioButton, QScrollArea
 
-from ui.AutostartManager import AutostartManager
 from ui.UIUtils import UIUtils, colorMode
 
-_ = lambda x: x
 
 class SettingsWindow(QtWidgets.QWidget):
     """
@@ -33,7 +29,7 @@ class SettingsWindow(QtWidgets.QWidget):
 
 
     def retranslate_ui(self):
-        self.setWindowTitle(_("Settings"))
+        self.setWindowTitle("Settings")
 
     def init_provider_ui(self, provider: AIProvider, layout):
         """
@@ -84,7 +80,7 @@ class SettingsWindow(QtWidgets.QWidget):
         Initialize the user interface for the settings window.
         Compact dark design focused on essentials.
         """
-        self.setWindowTitle(_('Settings'))
+        self.setWindowTitle('Settings')
         # Smaller, more compact window
         self.setMinimumWidth(450)
         self.setFixedWidth(450)
@@ -104,20 +100,12 @@ class SettingsWindow(QtWidgets.QWidget):
 
         # Title
         if not self.providers_only:
-            title_label = QtWidgets.QLabel(_("Settings"))
+            title_label = QtWidgets.QLabel("Settings")
             title_label.setStyleSheet("font-size: 20px; font-weight: bold; color: #ffffff; margin-bottom: 10px;")
             main_layout.addWidget(title_label, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
 
-            # Add autostart checkbox for Windows compiled version
-            if AutostartManager.get_startup_path():
-                self.autostart_checkbox = QtWidgets.QCheckBox(_("Start on Boot"))
-                self.autostart_checkbox.setStyleSheet("font-size: 14px; color: #ffffff;")
-                self.autostart_checkbox.setChecked(AutostartManager.check_autostart())
-                self.autostart_checkbox.stateChanged.connect(self.toggle_autostart)
-                main_layout.addWidget(self.autostart_checkbox)
-
             # Add shortcut key input
-            shortcut_label = QtWidgets.QLabel(_("Shortcut Key:"))
+            shortcut_label = QtWidgets.QLabel("Shortcut Key:")
             shortcut_label.setStyleSheet("font-size: 14px; color: #ffffff; margin-top: 10px;")
             main_layout.addWidget(shortcut_label)
 
@@ -139,7 +127,7 @@ class SettingsWindow(QtWidgets.QWidget):
         main_layout.addWidget(separator)
 
         # AI Provider section
-        provider_label = QtWidgets.QLabel(_("Gemini AI"))
+        provider_label = QtWidgets.QLabel("Gemini AI")
         provider_label.setStyleSheet("font-size: 16px; font-weight: bold; color: #ffffff; margin-top: 10px;")
         main_layout.addWidget(provider_label)
 
@@ -152,7 +140,7 @@ class SettingsWindow(QtWidgets.QWidget):
         self.init_provider_ui(provider_instance, self.provider_container)
 
         # Save button
-        save_button = QtWidgets.QPushButton(_("Finish AI Setup") if self.providers_only else _("Save"))
+        save_button = QtWidgets.QPushButton("Finish AI Setup" if self.providers_only else "Save")
         save_button.setStyleSheet("""
             QPushButton {
                 background-color: #4CAF50;
@@ -172,7 +160,7 @@ class SettingsWindow(QtWidgets.QWidget):
         main_layout.addWidget(save_button)
 
         if not self.providers_only:
-            restart_notice = QtWidgets.QLabel(_("Restart required for changes to take effect"))
+            restart_notice = QtWidgets.QLabel("Restart required for changes to take effect")
             restart_notice.setStyleSheet("font-size: 12px; color: #999999; margin-top: 8px;")
             restart_notice.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             main_layout.addWidget(restart_notice)
@@ -180,10 +168,6 @@ class SettingsWindow(QtWidgets.QWidget):
         # Compact window size
         self.resize(450, 380)
 
-    @staticmethod
-    def toggle_autostart(state):
-        """Toggle the autostart setting."""
-        AutostartManager.set_autostart(state == 2)
 
     def save_settings(self):
         """Save the current settings."""

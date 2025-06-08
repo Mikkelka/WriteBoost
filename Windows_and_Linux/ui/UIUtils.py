@@ -4,8 +4,7 @@ import sys
 from PySide6 import QtGui, QtCore, QtWidgets
 from PySide6.QtGui import QImage, QPixmap
 
-import darkdetect
-colorMode = 'dark' if darkdetect.isDark() else 'light'
+colorMode = 'dark'  # Always dark mode
 
 class UIUtils:
     @classmethod
