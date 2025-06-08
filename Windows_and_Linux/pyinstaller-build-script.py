@@ -14,10 +14,6 @@ def run_pyinstaller_build():
         "--noconfirm",
         "--add-data=options.json;.",
         "--add-data=icons;icons",
-        "--add-data=background.png;.",
-        "--add-data=background_dark.png;.",
-        "--add-data=background_popup.png;.",
-        "--add-data=background_popup_dark.png;.",
         # Exclude unnecessary modules
         "--exclude-module", "tkinter",
         "--exclude-module", "unittest",

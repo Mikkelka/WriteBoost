@@ -5,7 +5,7 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[('options.json', '.'), ('icons', 'icons'), ('background.png', '.'), ('background_dark.png', '.'), ('background_popup.png', '.'), ('background_popup_dark.png', '.')],
+    datas=[('options.json', '.'), ('icons', 'icons')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

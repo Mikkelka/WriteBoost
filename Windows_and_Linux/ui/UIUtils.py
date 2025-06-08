@@ -53,7 +53,7 @@ class UIUtils:
         if os.path.exists(icon_path): base.setWindowIcon(QtGui.QIcon(icon_path))
         main_layout = QtWidgets.QVBoxLayout(base)
         main_layout.setContentsMargins(0, 0, 0, 0)
-        base.background = ThemeBackground(base, 'gradient')
+        base.background = ThemeBackground(base, 'simple')
         main_layout.addWidget(base.background)
 
 
