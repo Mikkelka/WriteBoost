@@ -20,7 +20,6 @@ import ui.OnboardingWindow
 import ui.ResponseWindow
 import ui.SettingsWindow
 from aiprovider import GeminiProvider
-from update_checker import UpdateChecker
 
 _ = gettext.gettext
 
@@ -96,10 +95,6 @@ class WritingToolApp(QtWidgets.QApplication):
             except KeyError:
                 lang = None
             self.change_language(lang)
-
-            # Initialize update checker
-            self.update_checker = UpdateChecker(self)
-            self.update_checker.check_updates_async()
 
         self.recent_triggers = []  # Track recent hotkey triggers
         self.TRIGGER_WINDOW = 1.5  # Time window in seconds
