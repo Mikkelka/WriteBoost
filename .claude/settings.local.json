@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rm:*)",
+      "Bash(rg:*)",
+      "Bash(grep:*)",
+      "Bash(./create_translation.sh:*)",
+      "Bash(ls:*)",
+      "Bash(bash:*)"
+    ],
+    "deny": []
+  }
+}
