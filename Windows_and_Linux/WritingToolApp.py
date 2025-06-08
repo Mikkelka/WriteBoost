@@ -15,7 +15,6 @@ from PySide6.QtCore import QLocale, Signal, Slot
 from PySide6.QtGui import QCursor, QGuiApplication
 from PySide6.QtWidgets import QApplication, QMessageBox
 
-import ui.AboutWindow
 import ui.CustomPopupWindow
 import ui.OnboardingWindow
 import ui.ResponseWindow
@@ -54,7 +53,6 @@ class WritingToolApp(QtWidgets.QApplication):
         self.tray_icon = None
         self.tray_menu = None
         self.settings_window = None
-        self.about_window = None
         self.registered_hotkey = None
         self.output_queue = ""
         self.last_replace = 0
@@ -123,7 +121,6 @@ class WritingToolApp(QtWidgets.QApplication):
         translation.install()
         # Update the translation function for all UI components.
         self._ = translation.gettext
-        ui.AboutWindow._ = self._
         ui.SettingsWindow._ = self._
         ui.ResponseWindow._ = self._
         ui.OnboardingWindow._ = self._
@@ -590,10 +587,6 @@ class WritingToolApp(QtWidgets.QApplication):
         self.toggle_action = self.tray_menu.addAction(self._('Resume') if self.paused else self._('Pause'))
         self.toggle_action.triggered.connect(self.toggle_paused)
 
-        # About menu item
-        about_action = self.tray_menu.addAction(self._('About'))
-        about_action.triggered.connect(self.show_about)
-
         # Exit menu item
         exit_action = self.tray_menu.addAction(self._('Exit'))
         exit_action.triggered.connect(self.exit_app)
@@ -752,14 +745,6 @@ class WritingToolApp(QtWidgets.QApplication):
         self.settings_window.show()
 
 
-    def show_about(self):
-        """
-        Show the about window.
-        """
-        logging.debug('Showing about window')
-        if not self.about_window:
-            self.about_window = ui.AboutWindow.AboutWindow()
-        self.about_window.show()
 
     def setup_ctrl_c_listener(self):
         """
