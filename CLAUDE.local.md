@@ -1,0 +1,2 @@
+- Kald mig Mikkel
+- jeg er webudvikler og jeg ved ikke rigtig noget om det her sprog

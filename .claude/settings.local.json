@@ -6,7 +6,9 @@
       "Bash(grep:*)",
       "Bash(./create_translation.sh:*)",
       "Bash(ls:*)",
-      "Bash(bash:*)"
+      "Bash(bash:*)",
+      "Bash(pip install:*)",
+      "Bash(python3 -m pip install:*)"
     ],
     "deny": []
   }
