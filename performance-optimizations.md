@@ -69,17 +69,7 @@ if cache_key:
     return cache_key
 ```
 
-### 3. Model Selection Optimization
-**Current Issue**: Using balanced model instead of fastest  
-**Impact**: 200-500ms slower responses  
-**Solution**:
-```python
-# Update config.json default model
-"model_name": "gemini-2.0-flash-lite-preview-02-05"  # Fastest option
-# Or implement auto-selection based on task complexity
-```
-
-### 4. Request Preprocessing
+### 3. Request Preprocessing
 **Current Issue**: Large system instructions sent every time  
 **Impact**: Increased token usage and processing time  
 **Solution**:
@@ -100,7 +90,7 @@ def optimize_prompt(self, system_instruction, text):
 
 ## ⚡ Medium Priority Optimizations
 
-### 5. Text Processing Pipeline Optimization
+### 4. Text Processing Pipeline Optimization
 **Current Issue**: Multiple clipboard operations with sleeps  
 **File**: `WritingToolApp.py:290-325`  
 **Solution**:
@@ -131,7 +121,7 @@ def get_selected_text_optimized(self, max_retries=2):
     return ""
 ```
 
-### 6. Asynchronous Operations
+### 5. Asynchronous Operations
 **Current Issue**: Blocking operations on main thread  
 **Solution**:
 ```python
@@ -155,7 +145,7 @@ async def process_option_async(self, option, selected_text, custom_change=None):
     )
 ```
 
-### 7. Configuration Caching
+### 6. Configuration Caching
 **Current Issue**: Config files re-read frequently  
 **Solution**:
 ```python
@@ -177,15 +167,15 @@ class ConfigManager:
 
 ## 🎯 Low Priority Optimizations
 
-### 8. Startup Performance
+### 7. Startup Performance
 **Current Issue**: All components loaded at startup  
 **Solution**: Implement lazy loading for UI components and providers
 
-### 9. Memory Optimization
+### 8. Memory Optimization
 **Current Issue**: Chat history grows indefinitely  
 **Solution**: Implement chat history size limits and cleanup
 
-### 10. UI Responsiveness
+### 9. UI Responsiveness
 **Current Issue**: Heavy markdown rendering on main thread  
 **Solution**: Move markdown rendering to worker thread
 
@@ -195,11 +185,11 @@ class ConfigManager:
 |--------------|---------------------------|
 | Connection Pooling | 100-300ms faster |
 | Response Caching | 1-3s faster (cached requests) |
-| Faster Model | 200-500ms faster |
+| Request Preprocessing | 50-100ms faster |
 | Optimized Text Processing | 50-150ms faster |
 | Async Operations | Better UI responsiveness |
 
-**Total Expected Improvement**: 350ms - 1.2s faster response times for new requests, near-instant for cached requests.
+**Total Expected Improvement**: 200ms - 550ms faster response times for new requests, near-instant for cached requests.
 
 ## 🔧 Implementation Priority
 
