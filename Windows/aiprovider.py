@@ -266,13 +266,11 @@ class GeminiProvider(AIProvider):
     """
     Provider for Google's Gemini API.
     
-    Uses the new google.genai.Client.models.generate_content() to generate text.
+    Uses direct HTTP calls to the Gemini REST API with connection pooling for optimal performance.
     """
     def __init__(self, app):
         self.close_requested = False
-        self.client = None
         self.session = None
-        self.async_client = None
 
         settings = [
             TextSetting(name="api_key", display_name="API Key", description="Paste your Gemini API key here"),
@@ -315,21 +313,68 @@ class GeminiProvider(AIProvider):
         Returns the full response text if return_response is True,
         otherwise emits the text via the output_ready_signal.
         """
-        # Run async operations in an event loop
-        try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
+        import concurrent.futures
+        import threading
         
-        return loop.run_until_complete(self._get_response_async(system_instruction, prompt, return_response))
+        def run_async_in_thread():
+            """Run async code in a separate thread with its own event loop"""
+            loop = None
+            try:
+                # Create new event loop for this thread
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                
+                # Run the async function
+                result = loop.run_until_complete(self._get_response_async(system_instruction, prompt, return_response))
+                
+                # Ensure session is properly closed before loop cleanup
+                if self.session and not self.session.closed:
+                    loop.run_until_complete(self.session.close())
+                    self.session = None
+                
+                return result
+            except Exception as e:
+                # Clean up session on error
+                if self.session and not self.session.closed:
+                    try:
+                        if loop and not loop.is_closed():
+                            loop.run_until_complete(self.session.close())
+                        self.session = None
+                    except:
+                        pass
+                raise e
+            finally:
+                # Clean up event loop only after everything else is done
+                if loop and not loop.is_closed():
+                    try:
+                        # Give loop time to finish cleanup
+                        pending = asyncio.all_tasks(loop)
+                        if pending:
+                            loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
+                        loop.close()
+                    except:
+                        pass
+        
+        # Execute async code in a separate thread to avoid Qt event loop conflicts
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(run_async_in_thread)
+            try:
+                # Wait for result with timeout
+                result = future.result(timeout=30)  # 30 second timeout
+                return result
+            except concurrent.futures.TimeoutError:
+                logging.error("Request timed out after 30 seconds")
+                self.app.output_ready_signal.emit("Request timed out. Please try again.")
+                return ""
+            except Exception as e:
+                logging.error(f"Thread execution error: {e}")
+                raise e
 
     async def _get_response_async(self, system_instruction: str, prompt: str, return_response: bool = False) -> str:
         """
         Async implementation of get_response with connection pooling.
         """
         logging.debug(f"Getting response - API key available: {hasattr(self, 'api_key') and bool(self.api_key)}")
-        logging.debug(f"Client initialized: {self.client is not None}")
         
         self.close_requested = False
 
@@ -343,39 +388,86 @@ class GeminiProvider(AIProvider):
             logging.debug(f"System instruction length: {len(system_instruction)}")
             logging.debug(f"Prompt length: {len(prompt)}")
             
-            # Single-shot call using new Google genai client
-            # Note: We're still using the sync client but with connection pooling setup
-            response = await asyncio.get_event_loop().run_in_executor(
-                None, 
-                lambda: self.client.models.generate_content(
-                    model=self.model_name,
-                    contents=f"{system_instruction}\n\n{prompt}"
-                )
-            )
+            # Direct HTTP call to Gemini REST API using connection pooling
+            url = f"https://generativelanguage.googleapis.com/v1/models/{self.model_name}:generateContent"
             
-            logging.debug("API call completed successfully")
-            response_text = response.text.rstrip('\n')
-            if not return_response and not hasattr(self.app, 'current_response_window'):
-                self.app.output_ready_signal.emit(response_text)
-                self.app.replace_text(True)
-                return ""
-            return response_text
+            # Request payload following Gemini API format
+            payload = {
+                "contents": [
+                    {
+                        "parts": [
+                            {"text": f"{system_instruction}\n\n{prompt}"}
+                        ]
+                    }
+                ]
+            }
+            
+            # HTTP headers
+            headers = {
+                "Content-Type": "application/json"
+            }
+            
+            # API call using connection pooled session with timeout
+            timeout = aiohttp.ClientTimeout(total=25)  # 25 second HTTP timeout
+            async with session.post(
+                url, 
+                json=payload, 
+                headers=headers,
+                params={"key": self.api_key},
+                timeout=timeout
+            ) as http_response:
+                if http_response.status == 200:
+                    response_data = await http_response.json()
+                    response_text = response_data["candidates"][0]["content"]["parts"][0]["text"].rstrip('\n')
+                    logging.debug("API call completed successfully")
+                    
+                    if not return_response and not hasattr(self.app, 'current_response_window'):
+                        self.app.output_ready_signal.emit(response_text)
+                        self.app.replace_text(True)
+                        return ""
+                    return response_text
+                else:
+                    # Handle HTTP error status codes
+                    error_data = await http_response.json()
+                    error_message = error_data.get("error", {}).get("message", f"HTTP {http_response.status}")
+                    raise Exception(error_message)
+        except (asyncio.TimeoutError, aiohttp.ServerTimeoutError) as e:
+            # Handle timeout errors from aiohttp and asyncio
+            logging.error(f"HTTP timeout error: {type(e).__name__}: {str(e)}")
+            error_msg = "Request timed out. The AI service is taking too long to respond. Please try again."
+            logging.error(f"Processed error message: {error_msg}")
+            self.app.output_ready_signal.emit(error_msg)
+        except aiohttp.ClientError as e:
+            # Handle aiohttp connection errors
+            logging.error(f"HTTP connection error: {type(e).__name__}: {str(e)}")
+            error_msg = "Connection error. Please check your internet connection and try again."
+            logging.error(f"Processed error message: {error_msg}")
+            self.app.output_ready_signal.emit(error_msg)
+            # Reset session on connection errors
+            if self.session:
+                try:
+                    await self.session.close()
+                except:
+                    pass
+                self.session = None
         except Exception as e:
             # Log the full error for debugging
             logging.error(f"Full Gemini API exception: {type(e).__name__}: {str(e)}")
-            if hasattr(e, 'response'):
-                logging.error(f"Response object: {e.response}")
             
             # Check for common error types and provide helpful messages
             error_str = str(e)
-            if "quota" in error_str.lower() or "rate" in error_str.lower():
+            if "timeout" in error_str.lower() or "time out" in error_str.lower():
+                error_msg = "Request timed out. Please try again."
+            elif "quota" in error_str.lower() or "rate" in error_str.lower() or "429" in error_str:
                 error_msg = "Rate limit exceeded. Please wait a moment and try again."
             elif "safety" in error_str.lower() or "blocked" in error_str.lower():
                 error_msg = "Content was blocked by safety filters. Try rephrasing your request."
-            elif "not found" in error_str.lower() or "invalid" in error_str.lower():
+            elif "not found" in error_str.lower() or "invalid" in error_str.lower() or "400" in error_str:
                 error_msg = f"Model error. Please check your configuration. Details: {error_str}"
-            elif "authentication" in error_str.lower() or "api key" in error_str.lower():
+            elif "authentication" in error_str.lower() or "api key" in error_str.lower() or "401" in error_str or "403" in error_str:
                 error_msg = "Authentication failed. Please check your API key in settings."
+            elif "HTTP 5" in error_str:
+                error_msg = "Gemini service temporarily unavailable. Please try again in a moment."
             else:
                 error_msg = f"Gemini API Error: {error_str}"
             
@@ -388,7 +480,7 @@ class GeminiProvider(AIProvider):
 
     def after_load(self):
         """
-        Configure the Google genai client.
+        Validate configuration for direct HTTP API calls.
         """
         logging.debug(f"Configuring Gemini with API key: {'***' + str(getattr(self, 'api_key', 'NOT SET'))[-4:] if hasattr(self, 'api_key') and self.api_key else 'NOT SET'}")
         
@@ -396,10 +488,12 @@ class GeminiProvider(AIProvider):
             logging.error("No API key found in Gemini provider")
             return
             
-        self.client = genai.Client(api_key=self.api_key)
+        logging.debug("Gemini provider configured for connection pooled HTTP requests")
 
     def before_load(self):
-        self.client = None
+        """
+        Clean up aiohttp session before reloading configuration.
+        """
         if self.session:
             # Close the aiohttp session properly
             try:

@@ -469,14 +469,8 @@ class WritingToolApp(QtWidgets.QApplication):
             try:
                 # For Summary and Key Points, show in response window
                 if hasattr(self, 'current_response_window'):
-                    self.current_response_window.append_text(new_text)
-                    
-                    # If this is the initial response, add it to chat history
-                    if len(self.current_response_window.chat_history) == 1:  # Only original text exists
-                        self.current_response_window.chat_history.append({
-                            "role": "assistant",
-                            "content": self.output_queue.rstrip('\n')
-                        })
+                    # Use set_text for initial content, not append_text
+                    self.current_response_window.set_text(self.output_queue.rstrip('\n'))
                 else:
                     # For other options, use the original clipboard-based replacement
                     clipboard_backup = pyperclip.paste()
