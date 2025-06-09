@@ -637,13 +637,28 @@ class ResponseWindow(QtWidgets.QWidget):
         if not text.strip():
             return
                 
-        # Always ensure chat history is initialized properly
-        self.chat_history = [
-            {"role": "user", "content": f"{self.option}: {self.selected_text}"},
-            {"role": "assistant", "content": text}  # Add initial response immediately
-        ]
+        # Add assistant response to existing chat history, or create new if empty
+        if not self.chat_history:
+            # For direct chat scenarios without initial context
+            self.chat_history = []
+        
+        # Add the assistant response
+        self.chat_history.append({"role": "assistant", "content": text})
         
         self.stop_thinking_animation()
+        
+        # Show the user's initial message first (if it exists and isn't a system-generated format)
+        if len(self.chat_history) >= 2:  # Should have user message + assistant response
+            user_message = self.chat_history[0]["content"]
+            # Don't show system-generated messages like "Original text to summarize:"
+            if not user_message.startswith("Original text to"):
+                # For custom prompts without selected text, show the actual user question
+                user_display = self.chat_area.add_message(user_message, is_user=True)
+                if hasattr(self.app.config, 'response_window_zoom'):
+                    user_display.zoom_factor = self.app.config['response_window_zoom']
+                    user_display._apply_zoom()
+        
+        # Then show the AI response
         text_display = self.chat_area.add_message(text)
         
         # Update zoom state
