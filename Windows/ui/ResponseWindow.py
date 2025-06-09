@@ -344,10 +344,17 @@ class ResponseWindow(QtWidgets.QWidget):
         self.app.followup_response_signal.connect(self.handle_followup_response)
         logging.debug('Response signals connected')
 
-        # Set initial size for "Thinking..." state
-        initial_width = 800
-        initial_height = 400
+        # Set initial size to match final size to prevent resize jump
+        initial_width = 900
+        initial_height = 700
         self.resize(initial_width, initial_height)
+        
+        # Center the window on screen immediately
+        screen = QtWidgets.QApplication.primaryScreen()
+        frame_geometry = self.frameGeometry()
+        screen_center = screen.geometry().center()
+        frame_geometry.moveCenter(screen_center)
+        self.move(frame_geometry.topLeft())
                 
     def init_ui(self):
         # Window setup with enhanced flags
