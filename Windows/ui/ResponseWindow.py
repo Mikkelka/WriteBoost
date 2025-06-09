@@ -48,11 +48,20 @@ class MarkdownTextBrowser(QtWidgets.QTextBrowser):
         new_size = int(self.base_font_size * self.zoom_factor)
         
         # Updated stylesheet with table styling
+        if self.is_user_message:
+            # User message styling - blue/green tint
+            bg_color = '#2a3f5f' if colorMode == 'dark' else '#e3f2fd'
+            border_color = '#4a6fa5' if colorMode == 'dark' else '#90caf9'
+        else:
+            # AI message styling - neutral
+            bg_color = '#333' if colorMode == 'dark' else 'white'
+            border_color = '#555' if colorMode == 'dark' else '#ccc'
+            
         self.setStyleSheet(f"""
             QTextBrowser {{
-                background-color: {('transparent' if self.is_user_message else '#333' if colorMode == 'dark' else 'white')};
+                background-color: {bg_color};
                 color: {'#ffffff' if colorMode == 'dark' else '#000000'};
-                border: {('none' if self.is_user_message else '1px solid ' + ('#555' if colorMode == 'dark' else '#ccc'))};
+                border: 1px solid {border_color};
                 border-radius: 8px;
                 padding: 8px;
                 margin: 0px;
@@ -336,8 +345,8 @@ class ResponseWindow(QtWidgets.QWidget):
         logging.debug('Response signals connected')
 
         # Set initial size for "Thinking..." state
-        initial_width = 500
-        initial_height = 250
+        initial_width = 800
+        initial_height = 400
         self.resize(initial_width, initial_height)
                 
     def init_ui(self):
@@ -346,7 +355,7 @@ class ResponseWindow(QtWidgets.QWidget):
                           QtCore.Qt.WindowType.WindowCloseButtonHint | 
                           QtCore.Qt.WindowType.WindowMinimizeButtonHint |
                           QtCore.Qt.WindowType.WindowMaximizeButtonHint)
-        self.setMinimumSize(600, 400)
+        self.setMinimumSize(800, 600)
         
         # Main layout setup
         UIUtils.setup_window_and_layout(self)
@@ -608,11 +617,11 @@ class ResponseWindow(QtWidgets.QWidget):
                 max_height
             )
                 
-            # Set reasonable minimum height - increased by 10%
-            final_height = max(600, desired_total_height)  # Increased from 540
+            # Set reasonable minimum height - increased for better viewing
+            final_height = max(700, desired_total_height)  # Increased from 600
                 
-            # Set width to 600px
-            final_width = 600
+            # Set width to 900px for better readability
+            final_width = 900
                 
             # Update both width and height
             self.resize(final_width, final_height)
@@ -628,7 +637,7 @@ class ResponseWindow(QtWidgets.QWidget):
                 
         except Exception as e:
             logging.error(f"Error adjusting window height: {e}")
-            self.resize(600, 600)  # Updated fallback size
+            self.resize(900, 700)  # Updated fallback size
             self._size_initialized = True
 
     @Slot(str)
