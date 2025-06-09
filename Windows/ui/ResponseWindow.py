@@ -545,6 +545,7 @@ class ResponseWindow(QtWidgets.QWidget):
         self.loading_label.hide()
         self.input_field.setPlaceholderText(_("Ask a follow-up question"))
         self.input_field.setEnabled(True)
+        self.input_field.setFocus()
         
         # Force layout update
         if self.layout():
@@ -667,6 +668,7 @@ class ResponseWindow(QtWidgets.QWidget):
         
         self.stop_thinking_animation()
         self.input_field.setEnabled(True)
+        self.input_field.setFocus()
         
         # Update window height
         QtCore.QTimer.singleShot(100, self._adjust_window_height)
