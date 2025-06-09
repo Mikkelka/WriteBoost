@@ -647,11 +647,21 @@ class ResponseWindow(QtWidgets.QWidget):
         
         self.stop_thinking_animation()
         
-        # Show the user's initial message first (if it exists and isn't a system-generated format)
+        # Show the user's initial message first (if it exists)
         if len(self.chat_history) >= 2:  # Should have user message + assistant response
             user_message = self.chat_history[0]["content"]
-            # Don't show system-generated messages like "Original text to summarize:"
-            if not user_message.startswith("Original text to"):
+            
+            # For operations like Summary/Key Points, extract and show just the selected text
+            if user_message.startswith("Original text to"):
+                # Extract the actual text after "Original text to X:\n\n"
+                if ":\n\n" in user_message:
+                    actual_text = user_message.split(":\n\n", 1)[1]
+                    if actual_text.strip():  # Only show if there's actual content
+                        user_display = self.chat_area.add_message(actual_text, is_user=True)
+                        if hasattr(self.app.config, 'response_window_zoom'):
+                            user_display.zoom_factor = self.app.config['response_window_zoom']
+                            user_display._apply_zoom()
+            else:
                 # For custom prompts without selected text, show the actual user question
                 user_display = self.chat_area.add_message(user_message, is_user=True)
                 if hasattr(self.app.config, 'response_window_zoom'):
@@ -708,7 +718,7 @@ class ResponseWindow(QtWidgets.QWidget):
             text_display.zoom_factor = self.current_text_display.zoom_factor
             text_display._apply_zoom()
         
-        self.chat_history.append({"role": "user", "content": message})
+        # Don't add to chat_history here - it's done in process_followup_question
         self.start_thinking_animation()
         self.app.process_followup_question(self, message)
         

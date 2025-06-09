@@ -1,3 +1,4 @@
 - Kald mig Mikkel
 - jeg er webudvikler og jeg ved ikke rigtig noget om det her sprog
 - den her command virker til at build exe: python pyinstaller-build-script.py
+- når vi har løst et problem så skriv til sidst i besked: github commit: [navn til commit]
