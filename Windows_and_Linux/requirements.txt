@@ -1,4 +1,4 @@
-google-generativeai
+google-genai
 pyperclip
 pynput
 PySide6
