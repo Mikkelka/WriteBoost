@@ -31,7 +31,7 @@ Writing Tools is an Apple Intelligence-inspired application for Windows that sup
 ### Installation:
 1. **Install Python dependencies:**
    ```bash
-   cd Windows_and_Linux
+   cd Windows
    pip install -r requirements.txt
    ```
 
@@ -98,7 +98,7 @@ Refer to [Google's Privacy Policy](https://policies.google.com/privacy) for info
 
 To create a standalone executable:
 ```bash
-cd Windows_and_Linux
+cd Windows
 python pyinstaller-build-script.py
 ```
 

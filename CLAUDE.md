@@ -4,23 +4,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Writing Tools is an Apple Intelligence-inspired desktop application that provides AI-powered writing assistance system-wide. This version has been streamlined for Windows/Linux with English-only interface, Gemini AI integration, and simplified UI styling. Users can proofread, rewrite, summarize, and perform custom text operations on any selected text across all applications using a global hotkey (default: Ctrl+Space).
+Writing Tools is an Apple Intelligence-inspired desktop application that provides AI-powered writing assistance system-wide. This version has been streamlined for Windows with English-only interface, Gemini AI integration, and simplified UI styling. Users can proofread, rewrite, summarize, and perform custom text operations on any selected text across all applications using a global hotkey (default: Ctrl+Space).
 
 ## Development Commands
 
 ### Running from Source
 ```bash
 # Install dependencies
-pip install -r Windows_and_Linux/requirements.txt
+pip install -r Windows/requirements.txt
 
 # Run application
-cd Windows_and_Linux && python main.py
+cd Windows && python main.py
 ```
 
 ### Building Executable
 ```bash
-# Build with PyInstaller spec file (from Windows_and_Linux directory)
-cd Windows_and_Linux && python pyinstaller-build-script.py
+# Build with PyInstaller spec file (from Windows directory)
+cd Windows && python pyinstaller-build-script.py
 ```
 
 The spec file creates a single-file executable with optimized exclusions and proper resource bundling.
@@ -29,12 +29,12 @@ The spec file creates a single-file executable with optimized exclusions and pro
 ## Architecture Overview
 
 ### Core Application Structure
-- **Entry Point**: `Windows_and_Linux/main.py` - Simple launcher that starts the Qt application
-- **Main Application**: `Windows_and_Linux/WritingToolApp.py` - QApplication-based system tray app with global hotkey listener
-- **AI Provider System**: `Windows_and_Linux/aiprovider.py` - Simple Gemini AI provider implementation
+- **Entry Point**: `Windows/main.py` - Simple launcher that starts the Qt application
+- **Main Application**: `Windows/WritingToolApp.py` - QApplication-based system tray app with global hotkey listener
+- **AI Provider System**: `Windows/aiprovider.py` - Simple Gemini AI provider implementation
 
 ### UI Architecture
-The UI is modular with separate window classes in `Windows_and_Linux/ui/`:
+The UI is modular with separate window classes in `Windows/ui/`:
 - `CustomPopupWindow.py` - Main command selection popup (appears on hotkey)
 - `ResponseWindow.py` - Chat-style window for Summary/Key Points/Table operations with markdown rendering
 - `SettingsWindow.py` - Provider configuration and app settings
@@ -49,7 +49,7 @@ The UI is modular with separate window classes in `Windows_and_Linux/ui/`:
 ## Configuration System
 
 ### Writing Operations Configuration
-- `Windows_and_Linux/options.json` - Defines all writing operations, their prompts, icons, and behavior
+- `Windows/options.json` - Defines all writing operations, their prompts, icons, and behavior
 - Each operation has: `prefix`, `instruction`, `icon`, and `open_in_window` properties
 - `open_in_window: false` operations replace text directly
 - `open_in_window: true` operations show results in ResponseWindow with chat capability
@@ -117,11 +117,3 @@ This version is English-only with no localization system - all UI text is hardco
 - System tray integration
 - Auto-start on boot capability via Windows registry
 
-### Linux
-- Works well on X11
-- Limited Wayland support (works with XWayland apps)
-- May require running from source on some distributions
-
-### macOS
-- Separate native Swift implementation in `macOS/` directory
-- Maintained by different contributor with different architecture

@@ -1,0 +1,12 @@
+{
+    "shortcut": "ctrl+space",
+    "providers": {
+        "Gemini": {
+            "api_key": "AIzaSyC8wHizERCsxJ2InKaklekwGykjTjLsiPU",
+            "model_name": "gemini-2.5-flash-preview-05-20"
+        }
+    },
+    "locale": "en",
+    "streaming": false,
+    "provider": "Gemini"
+}

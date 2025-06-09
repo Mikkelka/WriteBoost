@@ -9,7 +9,9 @@
       "Bash(bash:*)",
       "Bash(pip install:*)",
       "Bash(python3 -m pip install:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(find:*)",
+      "Bash(mv:*)"
     ],
     "deny": []
   }
