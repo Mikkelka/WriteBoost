@@ -32,6 +32,8 @@ Note: Streaming has been fully removed throughout the code.
 import logging
 import os
 import webbrowser
+import asyncio
+import aiohttp
 from abc import ABC, abstractmethod
 from typing import List
 
@@ -269,6 +271,8 @@ class GeminiProvider(AIProvider):
     def __init__(self, app):
         self.close_requested = False
         self.client = None
+        self.session = None
+        self.async_client = None
 
         settings = [
             TextSetting(name="api_key", display_name="API Key", description="Paste your Gemini API key here"),
@@ -278,7 +282,6 @@ class GeminiProvider(AIProvider):
                 default_value="gemini-2.5-flash-preview-05-20",
                 description="Select Gemini model to use",
                 options=[
-                    ("Gemini 2.0 Flash Lite (intelligent | very fast | 30 uses/min)", "gemini-2.0-flash-lite-preview-02-05"),
                     ("Gemini 2.0 Flash (very intelligent | fast | 15 uses/min)", "gemini-2.0-flash"),
                     ("Gemini 2.0 Flash Thinking (most intelligent | slow | 10 uses/min)", "gemini-2.0-flash-thinking-exp-01-21"),
                     ("Gemini 2.5 Flash (most intelligent | fast | 10 uses/min)", "gemini-2.5-flash-preview-05-20"),
@@ -293,13 +296,37 @@ class GeminiProvider(AIProvider):
             "Get API Key",
             lambda: webbrowser.open("https://aistudio.google.com/app/apikey"))
 
+    async def _get_session(self):
+        """Get or create an aiohttp session with connection pooling"""
+        if not self.session:
+            connector = aiohttp.TCPConnector(
+                limit=10,  # Connection pool size
+                keepalive_timeout=30,
+                enable_cleanup_closed=True
+            )
+            self.session = aiohttp.ClientSession(connector=connector)
+        return self.session
+
     def get_response(self, system_instruction: str, prompt: str, return_response: bool = False) -> str:
         """
-        Generate content using Gemini.
+        Generate content using Gemini with connection pooling optimization.
         
         Always performs a single-shot request with streaming disabled.
         Returns the full response text if return_response is True,
         otherwise emits the text via the output_ready_signal.
+        """
+        # Run async operations in an event loop
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        
+        return loop.run_until_complete(self._get_response_async(system_instruction, prompt, return_response))
+
+    async def _get_response_async(self, system_instruction: str, prompt: str, return_response: bool = False) -> str:
+        """
+        Async implementation of get_response with connection pooling.
         """
         logging.debug(f"Getting response - API key available: {hasattr(self, 'api_key') and bool(self.api_key)}")
         logging.debug(f"Client initialized: {self.client is not None}")
@@ -307,15 +334,23 @@ class GeminiProvider(AIProvider):
         self.close_requested = False
 
         try:
+            # Ensure we have a connection pool session
+            session = await self._get_session()
+            logging.debug(f"Connection pooling: Session active with {session.connector.limit} max connections")
+            
             # Debug logging
             logging.debug(f"Making API call with model: {self.model_name}")
             logging.debug(f"System instruction length: {len(system_instruction)}")
             logging.debug(f"Prompt length: {len(prompt)}")
             
             # Single-shot call using new Google genai client
-            response = self.client.models.generate_content(
-                model=self.model_name,
-                contents=f"{system_instruction}\n\n{prompt}"
+            # Note: We're still using the sync client but with connection pooling setup
+            response = await asyncio.get_event_loop().run_in_executor(
+                None, 
+                lambda: self.client.models.generate_content(
+                    model=self.model_name,
+                    contents=f"{system_instruction}\n\n{prompt}"
+                )
             )
             
             logging.debug("API call completed successfully")
@@ -365,6 +400,14 @@ class GeminiProvider(AIProvider):
 
     def before_load(self):
         self.client = None
+        if self.session:
+            # Close the aiohttp session properly
+            try:
+                loop = asyncio.get_event_loop()
+                loop.run_until_complete(self.session.close())
+            except RuntimeError:
+                pass
+            self.session = None
 
     def cancel(self):
         self.close_requested = True

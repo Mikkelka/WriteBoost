@@ -11,7 +11,8 @@
       "Bash(python3 -m pip install:*)",
       "Bash(cp:*)",
       "Bash(find:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(pip3 install:*)"
     ],
     "deny": []
   }
