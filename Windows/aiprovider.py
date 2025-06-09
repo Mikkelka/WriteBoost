@@ -388,7 +388,9 @@ class GeminiProvider(AIProvider):
             logging.debug(f"Prompt length: {len(prompt)}")
             
             # Direct HTTP call to Gemini REST API using connection pooling
-            url = f"https://generativelanguage.googleapis.com/v1/models/{self.model_name}:generateContent"
+            # Use v1beta for newer models like Gemini 2.5
+            api_version = "v1beta" if "2.5" in self.model_name or "2.0" in self.model_name else "v1"
+            url = f"https://generativelanguage.googleapis.com/{api_version}/models/{self.model_name}:generateContent"
             
             # Request payload following Gemini API format
             payload = {
@@ -457,17 +459,16 @@ class GeminiProvider(AIProvider):
             error_str = str(e)
             if "timeout" in error_str.lower() or "time out" in error_str.lower():
                 error_msg = "Request timed out. Please try again."
-            elif "quota" in error_str.lower() or "rate" in error_str.lower() or "429" in error_str:
-                error_msg = "Rate limit exceeded. Please wait a moment and try again."
             elif "safety" in error_str.lower() or "blocked" in error_str.lower():
                 error_msg = "Content was blocked by safety filters. Try rephrasing your request."
             elif "not found" in error_str.lower() or "invalid" in error_str.lower() or "400" in error_str:
-                error_msg = f"Model error. Please check your configuration. Details: {error_str}"
+                error_msg = f"Model error: {error_str}"
             elif "authentication" in error_str.lower() or "api key" in error_str.lower() or "401" in error_str or "403" in error_str:
                 error_msg = "Authentication failed. Please check your API key in settings."
             elif "HTTP 5" in error_str:
                 error_msg = "Gemini service temporarily unavailable. Please try again in a moment."
             else:
+                # Show the actual error instead of hiding it behind generic messages
                 error_msg = f"Gemini API Error: {error_str}"
             
             logging.error(f"Processed error message: {error_msg}")
