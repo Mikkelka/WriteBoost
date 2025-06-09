@@ -397,6 +397,11 @@ class ResponseWindow(QtWidgets.QWidget):
         copy_bar.addWidget(copy_hint)
         copy_bar.addStretch()
         
+        save_chat_btn = QtWidgets.QPushButton(_("Save Chat"))
+        save_chat_btn.setStyleSheet(self.get_button_style())
+        save_chat_btn.clicked.connect(self.save_chat)
+        copy_bar.addWidget(save_chat_btn)
+        
         copy_md_btn = QtWidgets.QPushButton(_("Copy as Markdown"))
         copy_md_btn.setStyleSheet(self.get_button_style())
         copy_md_btn.clicked.connect(self.copy_first_response)  # Updated to only copy first response
@@ -702,6 +707,42 @@ class ResponseWindow(QtWidgets.QWidget):
                 markdown += f"**Assistant**: {msg['content']}\n\n"
                 
         QtWidgets.QApplication.clipboard().setText(markdown)
+    
+    def save_chat(self):
+        """Save the current chat"""
+        if not self.chat_history:
+            QtWidgets.QMessageBox.information(self, "No Chat", "There's no conversation to save yet.")
+            return
+        
+        try:
+            from ui.ChatManager import ChatManager
+            chat_manager = ChatManager()
+            
+            # Generate title from chat history
+            title = chat_manager.generate_chat_title(self.chat_history)
+            
+            # Show input dialog for custom title
+            text, ok = QtWidgets.QInputDialog.getText(
+                self, 
+                'Save Chat', 
+                'Enter a title for this chat:',
+                QtWidgets.QLineEdit.EchoMode.Normal,
+                title
+            )
+            
+            if ok and text.strip():
+                # Save or update chat
+                chat_id = getattr(self, 'saved_chat_id', None)
+                saved_id = chat_manager.save_chat(text.strip(), self.chat_history, chat_id)
+                
+                # Store the ID for future updates
+                self.saved_chat_id = saved_id
+                
+                QtWidgets.QMessageBox.information(self, "Chat Saved", f"Chat saved as: {text.strip()}")
+                
+        except Exception as e:
+            logging.error(f'Error saving chat: {e}')
+            QtWidgets.QMessageBox.warning(self, "Error", f"Failed to save chat: {e}")
         
     def closeEvent(self, event):
         """Handle window close event"""

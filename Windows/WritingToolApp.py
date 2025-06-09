@@ -535,6 +535,10 @@ class WritingToolApp(QtWidgets.QApplication):
         settings_action = self.tray_menu.addAction('Settings')
         settings_action.triggered.connect(self.show_settings)
 
+        # Chat History menu item
+        chat_history_action = self.tray_menu.addAction('Chat History')
+        chat_history_action.triggered.connect(self.show_chat_history)
+
         # Exit menu item
         exit_action = self.tray_menu.addAction('Exit')
         exit_action.triggered.connect(self.exit_app)
@@ -675,6 +679,20 @@ class WritingToolApp(QtWidgets.QApplication):
         self.settings_window.close_signal.connect(self.exit_app)
         self.settings_window.retranslate_ui()
         self.settings_window.show()
+    
+    def show_chat_history(self):
+        """
+        Show the chat history window.
+        """
+        logging.debug('Showing chat history window')
+        try:
+            import ui.ChatHistoryWindow
+            self.chat_history_window = ui.ChatHistoryWindow.ChatHistoryWindow(self)
+            self.chat_history_window.close_signal.connect(lambda: setattr(self, 'chat_history_window', None))
+            self.chat_history_window.show()
+        except Exception as e:
+            logging.error(f'Error showing chat history window: {e}')
+            self.show_message_signal.emit('Error', f'Failed to open chat history: {e}')
 
 
 
