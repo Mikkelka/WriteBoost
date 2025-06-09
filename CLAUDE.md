@@ -36,15 +36,24 @@ The spec file creates a single-file executable with optimized exclusions and pro
 ### UI Architecture
 The UI is modular with separate window classes in `Windows/ui/`:
 - `CustomPopupWindow.py` - Main command selection popup (appears on hotkey)
-- `ResponseWindow.py` - Chat-style window for Summary/Key Points/Table operations with markdown rendering
+- `ResponseWindow.py` - Enhanced chat-style window (900x700px) for Summary/Key Points/Table operations with markdown rendering, user message styling, and save functionality
 - `SettingsWindow.py` - Provider configuration and app settings
 - `OnboardingWindow.py` - Simplified first-time setup (hotkey configuration and Gemini API key)
+- `ChatHistoryWindow.py` - Window for viewing, opening, and managing saved chat conversations
+- `ChatManager.py` - Data management for saving and loading chat histories to JSON storage
 - `UIUtils.py` - Common styling utilities and simple background rendering
 
 ### Data Flow
 1. **Global hotkey detection** (pynput) → **Text capture** (clipboard) → **UI display** → **AI processing** → **Text replacement**
 2. **Threading model** ensures non-blocking AI operations using Qt signals/slots
-3. **System tray** provides persistent access to settings and controls
+3. **System tray** provides persistent access to settings, chat history, and controls
+4. **Chat persistence** enables saving conversations with automatic title generation and JSON storage
+
+### Chat History System
+- **ChatManager** handles all chat persistence operations (save, load, delete)
+- **Chat Storage**: `saved_chats.json` stores all conversations with metadata (title, timestamp, chat history)
+- **Auto-title Generation**: Creates meaningful titles from conversation content
+- **Conversation Continuity**: Saved chats can be reopened and continued seamlessly
 
 ## Configuration System
 
@@ -54,9 +63,11 @@ The UI is modular with separate window classes in `Windows/ui/`:
 - `open_in_window: false` operations replace text directly
 - `open_in_window: true` operations show results in ResponseWindow with chat capability
 
-### User Settings
-- `config.json` (created at runtime) - Stores Gemini API key and hotkey settings
+### User Settings & Data Storage
+- `config.json` (created at runtime) - Stores Gemini API key, hotkey settings, and UI preferences
+- `saved_chats.json` (created at runtime) - Persistent storage for all chat conversations with full history
 - Settings are managed through the SettingsWindow UI
+- Chat management through ChatHistoryWindow with save/load/delete operations
 
 ## Key Components
 
@@ -74,7 +85,7 @@ class AIProvider(ABC):
 ```
 
 Implementation:
-- `GeminiProvider` - Google's Gemini API integration
+- `GeminiProvider` - Google's Gemini API integration with automatic v1/v1beta API version selection based on model (supports Gemini 1.5 Flash, 1.5 Pro, 2.0 Flash, and 2.5 Flash models)
 
 ### Text Processing Pipeline
 1. **Text Selection**: Captured via clipboard operations for universal compatibility
@@ -87,10 +98,20 @@ Implementation:
 - **Runtime Resource Access**: Handles both development (file system) and compiled (temporary extraction) scenarios
 - **Icon System**: Theme-aware icon loading with `_dark.png` and `_light.png` variants
 
-### UI Styling
+### UI Styling & User Experience
 - Simple solid color backgrounds for clean, minimal appearance
 - Dark mode optimized styling throughout the interface
+- **Enhanced Chat UI**: User messages have blue-tinted backgrounds with borders for clear conversation distinction
+- **Larger Windows**: Chat windows open at 900x700px for improved readability
+- **Smooth Interactions**: Fixed input focus after AI responses, eliminated window resize jumps
+- **Message Display**: Shows user's original text/questions in conversation flow
 - Consistent styling through UIUtils across all windows
+
+### System Tray Integration
+- **Settings**: Access provider configuration and app preferences
+- **Chat History**: View, open, and manage saved conversations
+- **Exit**: Clean shutdown of application
+- Dark mode menu styling for consistent appearance
 
 ## Dependencies
 
@@ -113,7 +134,8 @@ This version is English-only with no localization system - all UI text is hardco
 ## Platform Considerations
 
 ### Windows
-- Portable executable deployment
-- System tray integration
+- Portable executable deployment with data files stored alongside executable
+- System tray integration with enhanced menu options
 - Auto-start on boot capability via Windows registry
+- **Data Storage**: `config.json` and `saved_chats.json` created in executable directory for portability
 
