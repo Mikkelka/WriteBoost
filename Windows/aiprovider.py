@@ -30,15 +30,16 @@ Note: Streaming has been fully removed throughout the code.
 """
 
 import logging
+import os
 import webbrowser
 from abc import ABC, abstractmethod
 from typing import List
 
 # External libraries
 from google import genai
-from PySide6 import QtWidgets
+from PySide6 import QtWidgets, QtCore
 from PySide6.QtWidgets import QVBoxLayout
-from ui.UIUtils import colorMode
+from ui.UIUtils import colorMode, get_resource_path
 
 
 class AIProviderSetting(ABC):
@@ -119,12 +120,17 @@ class DropdownSetting(AIProviderSetting):
         label.setStyleSheet("font-size: 14px; color: #ffffff; margin-bottom: 4px;")
         layout.addWidget(label)
         
-        # Dropdown
+        # Dropdown container
+        dropdown_container = QtWidgets.QWidget()
+        dropdown_layout = QtWidgets.QHBoxLayout(dropdown_container)
+        dropdown_layout.setContentsMargins(0, 0, 0, 0)
+        
         self.dropdown = QtWidgets.QComboBox()
         self.dropdown.setStyleSheet("""
             QComboBox {
                 font-size: 14px;
                 padding: 8px;
+                padding-right: 25px;
                 background-color: #404040;
                 color: #ffffff;
                 border: 1px solid #606060;
@@ -132,12 +138,12 @@ class DropdownSetting(AIProviderSetting):
             }
             QComboBox::drop-down {
                 border: none;
+                width: 0px;
             }
             QComboBox::down-arrow {
                 image: none;
-                border-left: 5px solid transparent;
-                border-right: 5px solid transparent;
-                border-top: 5px solid #ffffff;
+                width: 0px;
+                height: 0px;
             }
             QComboBox QAbstractItemView {
                 background-color: #404040;
@@ -145,12 +151,30 @@ class DropdownSetting(AIProviderSetting):
                 selection-background-color: #0078d7;
             }
         """)
+        
+        # Arrow label
+        arrow_label = QtWidgets.QLabel("▼")
+        arrow_label.setStyleSheet("""
+            QLabel {
+                color: #ffffff;
+                font-size: 12px;
+                background: transparent;
+                padding: 0px;
+                margin: 0px;
+            }
+        """)
+        arrow_label.setFixedSize(20, 20)
+        arrow_label.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents)
+        
+        dropdown_layout.addWidget(self.dropdown)
+        dropdown_layout.addWidget(arrow_label)
+        dropdown_layout.setSpacing(-20)  # Overlap the arrow on the dropdown
         for option, value in self.options:
             self.dropdown.addItem(option, value)
         index = self.dropdown.findData(self.internal_value)
         if index != -1:
             self.dropdown.setCurrentIndex(index)
-        layout.addWidget(self.dropdown)
+        layout.addWidget(dropdown_container)
 
     def set_value(self, value):
         self.internal_value = value
