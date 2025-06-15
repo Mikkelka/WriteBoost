@@ -36,6 +36,7 @@ import asyncio
 import aiohttp
 from abc import ABC, abstractmethod
 from typing import List
+from datetime import datetime
 
 # External libraries
 from google import genai
@@ -392,12 +393,16 @@ class GeminiProvider(AIProvider):
             api_version = "v1beta" if "2.5" in self.model_name or "2.0" in self.model_name else "v1"
             url = f"https://generativelanguage.googleapis.com/{api_version}/models/{self.model_name}:generateContent"
             
+            # Add current date to system instruction to help Gemini understand today's date
+            current_date = datetime.now().strftime("%Y-%m-%d")
+            enhanced_system_instruction = f"Today's date is {current_date}. {system_instruction}"
+            
             # Request payload following Gemini API format
             payload = {
                 "contents": [
                     {
                         "parts": [
-                            {"text": f"{system_instruction}\n\n{prompt}"}
+                            {"text": f"{enhanced_system_instruction}\n\n{prompt}"}
                         ]
                     }
                 ]
