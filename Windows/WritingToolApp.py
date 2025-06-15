@@ -374,7 +374,7 @@ class WritingToolApp(QtWidgets.QApplication):
                     # No selected text
                     if option == 'Custom':
                         prompt = custom_change
-                        system_instruction = "You are a friendly, helpful, compassionate, and endearing AI conversational assistant. Avoid making assumptions or generating harmful, biased, or inappropriate content. When in doubt, do not make up information. Ask the user for clarification if needed. Try not be unnecessarily repetitive in your response. You can, and should as appropriate, use Markdown formatting to make your response nicely readable."
+                        system_instruction = getattr(self.current_provider, 'chat_system_instruction', "You are a friendly, helpful, compassionate, and endearing AI conversational assistant. Avoid making assumptions or generating harmful, biased, or inappropriate content. When in doubt, do not make up information. Ask the user for clarification if needed. Try not be unnecessarily repetitive in your response. You can, and should as appropriate, use Markdown formatting to make your response nicely readable.")
                     else:
                         self.show_message_signal.emit('Error', 'Please select text to use this option.')
                         return
@@ -620,8 +620,8 @@ class WritingToolApp(QtWidgets.QApplication):
                 # Get chat history
                 history = response_window.chat_history.copy()
                 
-                # System instruction based on original option
-                system_instruction = "You are a helpful AI assistant. Provide clear and direct responses, maintaining the same format and style as your previous responses. If appropriate, use Markdown formatting to make your response more readable."
+                # System instruction from user settings
+                system_instruction = getattr(self.current_provider, 'chat_system_instruction', "You are a friendly, helpful, compassionate, and endearing AI conversational assistant. Avoid making assumptions or generating harmful, biased, or inappropriate content. When in doubt, do not make up information. Ask the user for clarification if needed. Try not be unnecessarily repetitive in your response. You can, and should as appropriate, use Markdown formatting to make your response nicely readable.")
                 
                 logging.debug('Sending request to AI provider')
                 

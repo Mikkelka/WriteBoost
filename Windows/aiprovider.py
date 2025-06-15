@@ -284,6 +284,12 @@ class GeminiProvider(AIProvider):
                     ("Gemini 2.0 Flash (very intelligent | fast | 15 uses/min)", "gemini-2.0-flash"),
                     ("Gemini 2.5 Flash (most intelligent | fast | 10 uses/min)", "gemini-2.5-flash-preview-05-20"),
                 ]
+            ),
+            TextSetting(
+                name="chat_system_instruction", 
+                display_name="Chat System Instruction",
+                default_value="You are a friendly, helpful, compassionate, and endearing AI conversational assistant. Avoid making assumptions or generating harmful, biased, or inappropriate content. When in doubt, do not make up information. Ask the user for clarification if needed. Try not be unnecessarily repetitive in your response. You can, and should as appropriate, use Markdown formatting to make your response nicely readable.",
+                description="System instruction for custom chat and follow-up questions (does not affect text operations like Proofread, Rewrite, etc.)"
             )
         ]
         super().__init__(app, "Gemini", settings,
