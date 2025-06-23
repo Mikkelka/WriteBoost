@@ -24,3 +24,6 @@ Windows/build/
 # Python cache
 *.pyc
 __pycache__/
+
+# Ruff cache
+.ruff_cache/

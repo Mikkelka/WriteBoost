@@ -6,6 +6,7 @@ from ui.UIUtils import UIUtils, colorMode
 
 _ = lambda x: x
 
+
 class OnboardingWindow(QtWidgets.QWidget):
     # Closing signal
     close_signal = QtCore.Signal()
@@ -13,15 +14,15 @@ class OnboardingWindow(QtWidgets.QWidget):
     def __init__(self, app):
         super().__init__()
         self.app = app
-        self.shortcut = 'ctrl+space'
+        self.shortcut = "ctrl+space"
         self.content_layout = None
         self.shortcut_input = None
         self.init_ui()
         self.self_close = False
 
     def init_ui(self):
-        logging.debug('Initializing onboarding UI')
-        self.setWindowTitle(_('Welcome to Writing Tools'))
+        logging.debug("Initializing onboarding UI")
+        self.setWindowTitle(_("Welcome to Writing Tools"))
         self.resize(600, 500)
 
         UIUtils.setup_window_and_layout(self)
@@ -37,26 +38,28 @@ class OnboardingWindow(QtWidgets.QWidget):
     def show_welcome_screen(self):
         UIUtils.clear_layout(self.content_layout)
 
-        title_label = QtWidgets.QLabel(_("Welcome to Writing Tools")+"!")
-        title_label.setStyleSheet(f"font-size: 24px; font-weight: bold; color: {'#ffffff' if colorMode == 'dark' else '#333333'};")
+        title_label = QtWidgets.QLabel(_("Welcome to Writing Tools") + "!")
+        title_label.setStyleSheet(
+            f"font-size: 24px; font-weight: bold; color: {'#ffffff' if colorMode == 'dark' else '#333333'};"
+        )
         self.content_layout.addWidget(title_label, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
 
         features_text = f"""
         • {_('Instantly optimize your writing with AI by selecting your text and invoking Writing Tools with "ctrl+space", anywhere.')} 
 
         • {_('Get a summary you can chat with of articles, YouTube videos, or documents by select all text with "ctrl+a"')}
-          {_('(or select the YouTube transcript from its description), invoking Writing Tools, and choosing Summary.')}
+          {_("(or select the YouTube transcript from its description), invoking Writing Tools, and choosing Summary.")}
 
-        • {_('Chat with AI anytime by invoking Writing Tools without selecting any text.')}
+        • {_("Chat with AI anytime by invoking Writing Tools without selecting any text.")}
 
-        • {_('Powered by Google Gemini AI')}
+        • {_("Powered by Google Gemini AI")}
         """
         features_label = QtWidgets.QLabel(features_text)
         features_label.setStyleSheet(f"font-size: 16px; color: {'#ffffff' if colorMode == 'dark' else '#333333'};")
         features_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeft)
         self.content_layout.addWidget(features_label)
 
-        shortcut_label = QtWidgets.QLabel("Customize your shortcut key (default: \"ctrl+space\"):")
+        shortcut_label = QtWidgets.QLabel('Customize your shortcut key (default: "ctrl+space"):')
         shortcut_label.setStyleSheet(f"font-size: 16px; color: {'#ffffff' if colorMode == 'dark' else '#333333'};")
         self.content_layout.addWidget(shortcut_label)
 
@@ -64,13 +67,13 @@ class OnboardingWindow(QtWidgets.QWidget):
         self.shortcut_input.setStyleSheet(f"""
             font-size: 16px;
             padding: 5px;
-            background-color: {'#444' if colorMode == 'dark' else 'white'};
-            color: {'#ffffff' if colorMode == 'dark' else '#000000'};
-            border: 1px solid {'#666' if colorMode == 'dark' else '#ccc'};
+            background-color: {"#444" if colorMode == "dark" else "white"};
+            color: {"#ffffff" if colorMode == "dark" else "#000000"};
+            border: 1px solid {"#666" if colorMode == "dark" else "#ccc"};
         """)
         self.content_layout.addWidget(self.shortcut_input)
 
-        next_button = QtWidgets.QPushButton(_('Next'))
+        next_button = QtWidgets.QPushButton(_("Next"))
         next_button.setStyleSheet("""
             QPushButton {
                 background-color: #4CAF50;
@@ -89,10 +92,8 @@ class OnboardingWindow(QtWidgets.QWidget):
 
     def on_next_clicked(self):
         self.shortcut = self.shortcut_input.text()
-        logging.debug(f'User selected shortcut: {self.shortcut}')
-        self.app.config = {
-            'shortcut': self.shortcut
-        }
+        logging.debug(f"User selected shortcut: {self.shortcut}")
+        self.app.config = {"shortcut": self.shortcut}
         self.show_api_key_input()
 
     def show_api_key_input(self):
