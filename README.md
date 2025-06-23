@@ -19,14 +19,17 @@ Writing Tools is an Apple Intelligence-inspired application for Windows that sup
 
 ### Chat Mode:
 - Press `Ctrl+Space` without selecting text to start a conversation with Gemini AI
-- Chat history is deleted when you close the window for privacy
+- Choose between different models and thinking levels for optimal performance
+- Dynamic thinking: AI decides when it needs to think for better responses
+- Save and continue conversations with built-in chat history
+- Real-time model switching within conversations
 
 ## 🚀 Installation & Setup
 
 ### Requirements:
 - Windows (tested on Windows 10/11)
 - Python 3.8 or later
-- Google Gemini API key (free from [Google AI Studio](https://makersuite.google.com/app/apikey))
+- Google Gemini API key (free from [Google AI Studio](https://aistudio.google.com/app/apikey))
 
 ### Installation:
 1. **Install Python dependencies:**
@@ -41,8 +44,9 @@ Writing Tools is an Apple Intelligence-inspired application for Windows that sup
    ```
 
 3. **Setup Gemini API:**
-   - Get your free API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+   - Get your free API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
    - Enter it in the setup window that appears on first launch
+   - Configure separate models for chat (Gemini 2.5 Flash) and text operations (Gemini 2.5 Flash Lite) for optimal performance
 
 ## 🎯 Options Explained
 
@@ -78,7 +82,8 @@ Writing Tools respects your privacy:
 - Does not collect or store any of your writing data
 - Only sends text to Google's Gemini API when you explicitly use a function
 - API key is stored locally on your device
-- Chat history is deleted when windows are closed
+- Chat history can be saved locally (optional) or deleted when windows are closed
+- All data remains on your device unless explicitly sent to AI
 
 Refer to [Google's Privacy Policy](https://policies.google.com/privacy) for information about data sent to Gemini.
 
@@ -93,6 +98,8 @@ Refer to [Google's Privacy Policy](https://policies.google.com/privacy) for info
 - **Dark Mode:** Automatically detects your system theme
 - **Hotkey:** Customize the global shortcut key
 - **Auto-start:** Enable starting with Windows
+- **AI Models:** Separate model selection for chat conversations vs text operations
+- **Thinking Levels:** Configure how much the AI thinks before responding
 
 ## 🏗️ Building
 

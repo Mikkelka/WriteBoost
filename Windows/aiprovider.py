@@ -32,14 +32,13 @@ Note: Streaming has been fully removed throughout the code.
 import logging
 import os
 import webbrowser
-import asyncio
-import aiohttp
 from abc import ABC, abstractmethod
 from typing import List
 from datetime import datetime
 
 # External libraries
 from google import genai
+from google.genai import types
 from PySide6 import QtWidgets, QtCore
 from PySide6.QtWidgets import QVBoxLayout
 from ui.UIUtils import colorMode, get_resource_path
@@ -265,24 +264,32 @@ class AIProvider(ABC):
 
 class GeminiProvider(AIProvider):
     """
-    Provider for Google's Gemini API.
-    
-    Uses direct HTTP calls to the Gemini REST API with connection pooling for optimal performance.
+    Provider for Google's Gemini API using the new genai.Client approach.
     """
     def __init__(self, app):
         self.close_requested = False
-        self.session = None
+        self.client = None
 
         settings = [
             TextSetting(name="api_key", display_name="API Key", description="Paste your Gemini API key here"),
             DropdownSetting(
-                name="model_name",
-                display_name="Model",
-                default_value="gemini-2.5-flash-preview-05-20",
-                description="Select Gemini model to use",
+                name="chat_model_name",
+                display_name="Chat Model",
+                default_value="gemini-2.5-flash",
+                description="Model for chat conversations and follow-up questions",
                 options=[
-                    ("Gemini 2.0 Flash (very intelligent | fast | 15 uses/min)", "gemini-2.0-flash"),
-                    ("Gemini 2.5 Flash (most intelligent | fast | 10 uses/min)", "gemini-2.5-flash-preview-05-20"),
+                    ("Gemini 2.5 Flash (most intelligent | fast | 10 uses/min)", "gemini-2.5-flash"),
+                    ("Gemini 2.5 Flash Lite (faster | lightweight | 15 uses/min)", "gemini-2.5-flash-lite-preview-06-17"),
+                ]
+            ),
+            DropdownSetting(
+                name="text_model_name",
+                display_name="Text Operations Model",
+                default_value="gemini-2.5-flash-lite-preview-06-17",
+                description="Model for text operations (Proofread, Rewrite, etc.)",
+                options=[
+                    ("Gemini 2.5 Flash (most intelligent | fast | 10 uses/min)", "gemini-2.5-flash"),
+                    ("Gemini 2.5 Flash Lite (faster | lightweight | 15 uses/min)", "gemini-2.5-flash-lite-preview-06-17"),
                 ]
             ),
             TextSetting(
@@ -300,208 +307,85 @@ class GeminiProvider(AIProvider):
             "Get API Key",
             lambda: webbrowser.open("https://aistudio.google.com/app/apikey"))
 
-    async def _get_session(self):
-        """Get or create an aiohttp session with connection pooling"""
-        if not self.session:
-            connector = aiohttp.TCPConnector(
-                limit=10,  # Connection pool size
-                keepalive_timeout=30,
-                enable_cleanup_closed=True
-            )
-            self.session = aiohttp.ClientSession(connector=connector)
-        return self.session
-
-    def get_response(self, system_instruction: str, prompt: str, return_response: bool = False) -> str:
+    def get_response(self, system_instruction: str, prompt: str, return_response: bool = False, model: str = None, thinking_budget: int = None) -> str:
         """
-        Generate content using Gemini with connection pooling optimization.
+        Generate content using Gemini with the new genai.Client approach.
         
-        Always performs a single-shot request with streaming disabled.
+        Much simpler than the previous HTTP implementation.
         Returns the full response text if return_response is True,
         otherwise emits the text via the output_ready_signal.
-        """
-        import concurrent.futures
-        import threading
         
-        def run_async_in_thread():
-            """Run async code in a separate thread with its own event loop"""
-            loop = None
-            try:
-                # Create new event loop for this thread
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                
-                # Run the async function
-                result = loop.run_until_complete(self._get_response_async(system_instruction, prompt, return_response))
-                
-                # Ensure session is properly closed before loop cleanup
-                if self.session and not self.session.closed:
-                    loop.run_until_complete(self.session.close())
-                    self.session = None
-                
-                return result
-            except Exception as e:
-                # Clean up session on error
-                if self.session and not self.session.closed:
-                    try:
-                        if loop and not loop.is_closed():
-                            loop.run_until_complete(self.session.close())
-                        self.session = None
-                    except:
-                        pass
-                raise e
-            finally:
-                # Clean up event loop only after everything else is done
-                if loop and not loop.is_closed():
-                    try:
-                        # Give loop time to finish cleanup
-                        pending = asyncio.all_tasks(loop)
-                        if pending:
-                            loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
-                        loop.close()
-                    except:
-                        pass
-        
-        # Execute async code in a separate thread to avoid Qt event loop conflicts
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-            future = executor.submit(run_async_in_thread)
-            try:
-                # Wait for result with timeout
-                result = future.result(timeout=30)  # 30 second timeout
-                return result
-            except concurrent.futures.TimeoutError:
-                logging.error("Request timed out after 30 seconds")
-                self.app.output_ready_signal.emit("Request timed out. Please try again.")
-                return ""
-            except Exception as e:
-                logging.error(f"Thread execution error: {e}")
-                raise e
-
-    async def _get_response_async(self, system_instruction: str, prompt: str, return_response: bool = False) -> str:
-        """
-        Async implementation of get_response with connection pooling.
+        Args:
+            model: Override the default model (e.g., "gemini-2.5-flash")
+            thinking_budget: Override the default thinking budget (0=no thinking, -1=dynamic, >0=specific amount)
         """
         logging.debug(f"Getting response - API key available: {hasattr(self, 'api_key') and bool(self.api_key)}")
         
         self.close_requested = False
 
         try:
-            # Ensure we have a connection pool session
-            session = await self._get_session()
-            logging.debug(f"Connection pooling: Session active with {session.connector.limit} max connections")
+            # Determine which model to use based on operation type
+            if model:
+                # Explicit model override
+                use_model = model
+            elif return_response:
+                # Chat operations (return_response=True) use chat model
+                use_model = getattr(self, 'chat_model_name', 'gemini-2.5-flash')
+            else:
+                # Text operations (return_response=False) use text model
+                use_model = getattr(self, 'text_model_name', 'gemini-2.5-flash-lite-preview-06-17')
+                
+            # Use provided thinking budget or fall back to default (0 = no thinking)
+            use_thinking = thinking_budget if thinking_budget is not None else 0
             
             # Debug logging
-            logging.debug(f"Making API call with model: {self.model_name}")
+            logging.debug(f"Making API call with model: {use_model}")
+            logging.debug(f"Using thinking budget: {use_thinking}")
             logging.debug(f"System instruction length: {len(system_instruction)}")
             logging.debug(f"Prompt length: {len(prompt)}")
             
-            # Direct HTTP call to Gemini REST API using connection pooling
-            # Use v1beta for newer models like Gemini 2.5
-            api_version = "v1beta" if "2.5" in self.model_name or "2.0" in self.model_name else "v1"
-            url = f"https://generativelanguage.googleapis.com/{api_version}/models/{self.model_name}:generateContent"
-            
-            # Add current date to system instruction to help Gemini understand today's date
+            # Add current date, model info, and thinking mode to system instruction
             current_date = datetime.now().strftime("%Y-%m-%d")
-            enhanced_system_instruction = f"Today's date is {current_date}. {system_instruction}"
+            thinking_mode = "no thinking" if use_thinking == 0 else ("dynamic thinking" if use_thinking == -1 else f"thinking budget: {use_thinking}")
+            enhanced_system_instruction = f"Today's date is {current_date}. You are running on {use_model} with {thinking_mode}. {system_instruction}"
             
-            # Request payload following Gemini API format
-            payload = {
-                "contents": [
-                    {
-                        "parts": [
-                            {"text": f"{enhanced_system_instruction}\n\n{prompt}"}
-                        ]
-                    }
-                ],
-                "safetySettings": [
-                    {
-                        "category": "HARM_CATEGORY_HARASSMENT",
-                        "threshold": "BLOCK_NONE"
-                    },
-                    {
-                        "category": "HARM_CATEGORY_HATE_SPEECH",
-                        "threshold": "BLOCK_NONE"
-                    },
-                    {
-                        "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                        "threshold": "BLOCK_NONE"
-                    },
-                    {
-                        "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-                        "threshold": "BLOCK_NONE"
-                    },
-                    {
-                        "category": "HARM_CATEGORY_CIVIC_INTEGRITY",
-                        "threshold": "BLOCK_NONE"
-                    }
-                ]
-            }
+            # Combine system instruction and prompt
+            full_prompt = f"{enhanced_system_instruction}\n\n{prompt}"
             
-            # HTTP headers
-            headers = {
-                "Content-Type": "application/json"
-            }
+            # Generate content using the new genai.Client approach
+            response = self.client.models.generate_content(
+                model=use_model,
+                contents=full_prompt,
+                config=types.GenerateContentConfig(
+                    thinking_config=types.ThinkingConfig(thinking_budget=use_thinking)
+                )
+            )
             
-            # API call using connection pooled session with timeout
-            timeout = aiohttp.ClientTimeout(total=25)  # 25 second HTTP timeout
-            async with session.post(
-                url, 
-                json=payload, 
-                headers=headers,
-                params={"key": self.api_key},
-                timeout=timeout
-            ) as http_response:
-                if http_response.status == 200:
-                    response_data = await http_response.json()
-                    response_text = response_data["candidates"][0]["content"]["parts"][0]["text"].rstrip('\n')
-                    logging.debug("API call completed successfully")
-                    
-                    if not return_response and not hasattr(self.app, 'current_response_window'):
-                        self.app.output_ready_signal.emit(response_text)
-                        self.app.replace_text(True)
-                        return ""
-                    return response_text
-                else:
-                    # Handle HTTP error status codes
-                    error_data = await http_response.json()
-                    error_message = error_data.get("error", {}).get("message", f"HTTP {http_response.status}")
-                    raise Exception(error_message)
-        except (asyncio.TimeoutError, aiohttp.ServerTimeoutError) as e:
-            # Handle timeout errors from aiohttp and asyncio
-            logging.error(f"HTTP timeout error: {type(e).__name__}: {str(e)}")
-            error_msg = "Request timed out. The AI service is taking too long to respond. Please try again."
-            logging.error(f"Processed error message: {error_msg}")
-            self.app.output_ready_signal.emit(error_msg)
-        except aiohttp.ClientError as e:
-            # Handle aiohttp connection errors
-            logging.error(f"HTTP connection error: {type(e).__name__}: {str(e)}")
-            error_msg = "Connection error. Please check your internet connection and try again."
-            logging.error(f"Processed error message: {error_msg}")
-            self.app.output_ready_signal.emit(error_msg)
-            # Reset session on connection errors
-            if self.session:
-                try:
-                    await self.session.close()
-                except:
-                    pass
-                self.session = None
+            response_text = response.text.rstrip('\n')
+            logging.debug("API call completed successfully")
+            
+            if not return_response and not hasattr(self.app, 'current_response_window'):
+                self.app.output_ready_signal.emit(response_text)
+                self.app.replace_text(True)
+                return ""
+            return response_text
+            
         except Exception as e:
-            # Log the full error for debugging
-            logging.error(f"Full Gemini API exception: {type(e).__name__}: {str(e)}")
+            # Handle various error types
+            logging.error(f"Gemini API exception: {type(e).__name__}: {str(e)}")
             
-            # Check for common error types and provide helpful messages
             error_str = str(e)
             if "timeout" in error_str.lower() or "time out" in error_str.lower():
                 error_msg = "Request timed out. Please try again."
             elif "safety" in error_str.lower() or "blocked" in error_str.lower():
                 error_msg = "Content was blocked by safety filters. Try rephrasing your request."
-            elif "not found" in error_str.lower() or "invalid" in error_str.lower() or "400" in error_str:
+            elif "not found" in error_str.lower() or "invalid" in error_str.lower():
                 error_msg = f"Model error: {error_str}"
-            elif "authentication" in error_str.lower() or "api key" in error_str.lower() or "401" in error_str or "403" in error_str:
+            elif "authentication" in error_str.lower() or "api key" in error_str.lower() or "unauthorized" in error_str.lower():
                 error_msg = "Authentication failed. Please check your API key in settings."
-            elif "HTTP 5" in error_str:
+            elif "service unavailable" in error_str.lower() or "server error" in error_str.lower():
                 error_msg = "Gemini service temporarily unavailable. Please try again in a moment."
             else:
-                # Show the actual error instead of hiding it behind generic messages
                 error_msg = f"Gemini API Error: {error_str}"
             
             logging.error(f"Processed error message: {error_msg}")
@@ -513,28 +397,23 @@ class GeminiProvider(AIProvider):
 
     def after_load(self):
         """
-        Validate configuration for direct HTTP API calls.
+        Initialize the genai.Client after configuration is loaded.
         """
         logging.debug(f"Configuring Gemini with API key: {'***' + str(getattr(self, 'api_key', 'NOT SET'))[-4:] if hasattr(self, 'api_key') and self.api_key else 'NOT SET'}")
         
         if not hasattr(self, 'api_key') or not self.api_key:
             logging.error("No API key found in Gemini provider")
             return
-            
-        logging.debug("Gemini provider configured for connection pooled HTTP requests")
+        
+        # Create the genai.Client with the API key
+        self.client = genai.Client(api_key=self.api_key)
+        logging.debug("Gemini provider configured with genai.Client")
 
     def before_load(self):
         """
-        Clean up aiohttp session before reloading configuration.
+        Clean up client before reloading configuration.
         """
-        if self.session:
-            # Close the aiohttp session properly
-            try:
-                loop = asyncio.get_event_loop()
-                loop.run_until_complete(self.session.close())
-            except RuntimeError:
-                pass
-            self.session = None
+        self.client = None
 
     def cancel(self):
         self.close_requested = True

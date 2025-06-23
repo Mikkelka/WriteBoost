@@ -244,6 +244,14 @@ class WritingToolApp(QtWidgets.QApplication):
 
         logging.debug(f'Selected text: "{selected_text}"')
         try:
+            # Check if we have any meaningful text
+            if not selected_text.strip():
+                logging.debug('No text selected, opening chat window directly')
+                # Open ResponseWindow directly for chat
+                response_window = ui.ResponseWindow.ResponseWindow(self, "Chat", None)
+                response_window.show()
+                return
+                
             if self.popup_window is not None:
                 logging.debug('Existing popup window found')
                 if self.popup_window.isVisible():
@@ -597,19 +605,18 @@ class WritingToolApp(QtWidgets.QApplication):
     This implementation manages chat history & model roles for the Gemini provider.
     """
 
-    def process_followup_question(self, response_window, question):
+    def process_followup_question(self, response_window, question, model=None, thinking_budget=None):
         """
         Process a follow-up question in the chat window.
         """
-        logging.debug(f'Processing follow-up question: {question}')
+        logging.debug(f'Processing follow-up question: {question} with model: {model}, thinking: {thinking_budget}')
         
         def process_thread():
             logging.debug('Starting follow-up processing thread')
             try:
-                if not response_window.chat_history:
-                    logging.error("No chat history found")
-                    self.show_message_signal.emit('Error', 'Chat history not found')
-                    return
+                # Initialize chat_history if it doesn't exist (for direct chat mode)
+                if not hasattr(response_window, 'chat_history') or response_window.chat_history is None:
+                    response_window.chat_history = []
 
                 # Add current question to chat history
                 response_window.chat_history.append({
@@ -629,11 +636,13 @@ class WritingToolApp(QtWidgets.QApplication):
                 # Build conversation context from history
                 conversation_text = system_instruction + "\n\n"
                 
-                for msg in history[:-1]:  # Exclude the current question
-                    if msg["role"] == "user":
-                        conversation_text += f"User: {msg['content']}\n\n"
-                    else:
-                        conversation_text += f"Assistant: {msg['content']}\n\n"
+                # Only add previous conversation if there is any
+                if len(history) > 1:  # More than just the current question
+                    for msg in history[:-1]:  # Exclude the current question
+                        if msg["role"] == "user":
+                            conversation_text += f"User: {msg['content']}\n\n"
+                        else:
+                            conversation_text += f"Assistant: {msg['content']}\n\n"
                 
                 conversation_text += f"User: {question}\n\nAssistant:"
                 
@@ -641,7 +650,9 @@ class WritingToolApp(QtWidgets.QApplication):
                 response_text = self.current_provider.get_response(
                     system_instruction="", 
                     prompt=conversation_text,
-                    return_response=True
+                    return_response=True,
+                    model=model,
+                    thinking_budget=thinking_budget
                 )
 
                 logging.debug(f'Got response of length: {len(response_text)}')
