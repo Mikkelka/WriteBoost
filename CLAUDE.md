@@ -35,9 +35,9 @@ The spec file creates a single-file executable with optimized exclusions and pro
 
 ### UI Architecture
 The UI is modular with separate window classes in `Windows/ui/`:
-- `CustomPopupWindow.py` - Main command selection popup (appears on hotkey)
-- `ResponseWindow.py` - Enhanced chat-style window (900x700px) for Summary/Key Points/Table operations with markdown rendering, user message styling, and save functionality
-- `SettingsWindow.py` - Provider configuration and app settings
+- `CustomPopupWindow.py` - Main command selection popup (appears on hotkey when text is selected)
+- `ResponseWindow.py` - Enhanced chat-style window (900x700px) with model/thinking controls, markdown rendering, user message styling, and save functionality. Opens directly when no text is selected.
+- `SettingsWindow.py` - Provider configuration with separate chat and text operation model settings
 - `OnboardingWindow.py` - Simplified first-time setup (hotkey configuration and Gemini API key)
 - `ChatHistoryWindow.py` - Window for viewing, opening, and managing saved chat conversations
 - `ChatManager.py` - Data management for saving and loading chat histories to JSON storage
@@ -45,9 +45,10 @@ The UI is modular with separate window classes in `Windows/ui/`:
 
 ### Data Flow
 1. **Global hotkey detection** (pynput) → **Text capture** (clipboard) → **UI display** → **AI processing** → **Text replacement**
-2. **Threading model** ensures non-blocking AI operations using Qt signals/slots
-3. **System tray** provides persistent access to settings, chat history, and controls
-4. **Chat persistence** enables saving conversations with automatic title generation and JSON storage
+2. **Direct chat mode**: When no text is selected, hotkey opens ResponseWindow directly for AI conversations
+3. **Threading model** ensures non-blocking AI operations using Qt signals/slots
+4. **System tray** provides persistent access to settings, chat history, and controls
+5. **Chat persistence** enables saving conversations with automatic title generation and JSON storage
 
 ### Chat History System
 - **ChatManager** handles all chat persistence operations (save, load, delete)
@@ -64,9 +65,9 @@ The UI is modular with separate window classes in `Windows/ui/`:
 - `open_in_window: true` operations show results in ResponseWindow with chat capability
 
 ### User Settings & Data Storage
-- `config.json` (created at runtime) - Stores Gemini API key, hotkey settings, and UI preferences
+- `config.json` (created at runtime) - Stores Gemini API key, separate model settings (chat vs text operations), hotkey settings, and UI preferences
 - `saved_chats.json` (created at runtime) - Persistent storage for all chat conversations with full history
-- Settings are managed through the SettingsWindow UI
+- Settings are managed through the SettingsWindow UI with separate model selection for different operation types
 - Chat management through ChatHistoryWindow with save/load/delete operations
 
 ## Key Components
@@ -75,7 +76,8 @@ The UI is modular with separate window classes in `Windows/ui/`:
 ```python
 class AIProvider(ABC):
     @abstractmethod
-    def get_response(self, prompt: str) -> str
+    def get_response(self, system_instruction: str, prompt: str, return_response: bool = False, 
+                    model: str = None, thinking_budget: int = None) -> str
     
     @abstractmethod  
     def get_settings_ui(self, parent) -> QWidget
@@ -85,13 +87,19 @@ class AIProvider(ABC):
 ```
 
 Implementation:
-- `GeminiProvider` - Google's Gemini API integration with automatic v1/v1beta API version selection based on model (supports Gemini 1.5 Flash, 1.5 Pro, 2.0 Flash, and 2.5 Flash models)
+- `GeminiProvider` - Google's Gemini API integration using the new `genai.Client()` approach with thinking functionality (supports Gemini 2.5 Flash and 2.5 Flash Lite models)
 
 ### Text Processing Pipeline
 1. **Text Selection**: Captured via clipboard operations for universal compatibility
-2. **Command Selection**: CustomPopupWindow displays available operations
-3. **AI Processing**: Threaded execution prevents UI freezing via Gemini API
+2. **Command Selection**: CustomPopupWindow displays available operations (if text selected) or opens chat directly (if no text)
+3. **AI Processing**: Threaded execution prevents UI freezing via Gemini API with automatic model selection
 4. **Result Handling**: Direct replacement or ResponseWindow display based on operation type
+
+### AI Model & Thinking System
+- **Separate Model Configuration**: Chat operations use chat model (default: Gemini 2.5 Flash), text operations use text model (default: Gemini 2.5 Flash Lite)
+- **Thinking Functionality**: Chat supports dynamic thinking where the model decides when to think before responding
+- **Real-time Controls**: ResponseWindow includes dropdowns for model and thinking level selection per conversation
+- **Context Awareness**: AI receives current date, model name, and thinking mode in system instructions
 
 ### Resource Management
 - **PyInstaller Compatibility**: Uses `get_resource_path()` function to locate bundled resources (icons, options.json)
@@ -122,7 +130,7 @@ Implementation:
 - **markdown2** - Markdown rendering in response windows
 
 ### AI Provider Dependencies
-- **google-generativeai** - Gemini API client
+- **google-genai** - Modern Gemini API client with thinking support
 
 ### Build Dependencies
 - **pyinstaller** - Executable creation

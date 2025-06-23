@@ -273,10 +273,20 @@ class GeminiProvider(AIProvider):
         settings = [
             TextSetting(name="api_key", display_name="API Key", description="Paste your Gemini API key here"),
             DropdownSetting(
-                name="model_name",
-                display_name="Model",
+                name="chat_model_name",
+                display_name="Chat Model",
                 default_value="gemini-2.5-flash",
-                description="Select Gemini model to use",
+                description="Model for chat conversations and follow-up questions",
+                options=[
+                    ("Gemini 2.5 Flash (most intelligent | fast | 10 uses/min)", "gemini-2.5-flash"),
+                    ("Gemini 2.5 Flash Lite (faster | lightweight | 15 uses/min)", "gemini-2.5-flash-lite-preview-06-17"),
+                ]
+            ),
+            DropdownSetting(
+                name="text_model_name",
+                display_name="Text Operations Model",
+                default_value="gemini-2.5-flash-lite-preview-06-17",
+                description="Model for text operations (Proofread, Rewrite, etc.)",
                 options=[
                     ("Gemini 2.5 Flash (most intelligent | fast | 10 uses/min)", "gemini-2.5-flash"),
                     ("Gemini 2.5 Flash Lite (faster | lightweight | 15 uses/min)", "gemini-2.5-flash-lite-preview-06-17"),
@@ -314,9 +324,18 @@ class GeminiProvider(AIProvider):
         self.close_requested = False
 
         try:
-            # Use provided model or fall back to configured model
-            use_model = model if model else self.model_name
-            # Use provided thinking budget or fall back to default (0)
+            # Determine which model to use based on operation type
+            if model:
+                # Explicit model override
+                use_model = model
+            elif return_response:
+                # Chat operations (return_response=True) use chat model
+                use_model = getattr(self, 'chat_model_name', 'gemini-2.5-flash')
+            else:
+                # Text operations (return_response=False) use text model
+                use_model = getattr(self, 'text_model_name', 'gemini-2.5-flash-lite-preview-06-17')
+                
+            # Use provided thinking budget or fall back to default (0 = no thinking)
             use_thinking = thinking_budget if thinking_budget is not None else 0
             
             # Debug logging
