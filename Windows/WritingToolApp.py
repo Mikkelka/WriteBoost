@@ -374,7 +374,7 @@ class WritingToolApp(QtWidgets.QApplication):
                     # No selected text
                     if option == 'Custom':
                         prompt = custom_change
-                        system_instruction = "You are a friendly, helpful, compassionate, and endearing AI conversational assistant. Avoid making assumptions or generating harmful, biased, or inappropriate content. When in doubt, do not make up information. Ask the user for clarification if needed. Try not be unnecessarily repetitive in your response. You can, and should as appropriate, use Markdown formatting to make your response nicely readable."
+                        system_instruction = getattr(self.current_provider, 'chat_system_instruction', "You are a friendly, helpful, compassionate, and endearing AI conversational assistant. Avoid making assumptions or generating harmful, biased, or inappropriate content. When in doubt, do not make up information. Ask the user for clarification if needed. Try not be unnecessarily repetitive in your response. You can, and should as appropriate, use Markdown formatting to make your response nicely readable.")
                     else:
                         self.show_message_signal.emit('Error', 'Please select text to use this option.')
                         return
@@ -469,14 +469,8 @@ class WritingToolApp(QtWidgets.QApplication):
             try:
                 # For Summary and Key Points, show in response window
                 if hasattr(self, 'current_response_window'):
-                    self.current_response_window.append_text(new_text)
-                    
-                    # If this is the initial response, add it to chat history
-                    if len(self.current_response_window.chat_history) == 1:  # Only original text exists
-                        self.current_response_window.chat_history.append({
-                            "role": "assistant",
-                            "content": self.output_queue.rstrip('\n')
-                        })
+                    # Use set_text for initial content, not append_text
+                    self.current_response_window.set_text(self.output_queue.rstrip('\n'))
                 else:
                     # For other options, use the original clipboard-based replacement
                     clipboard_backup = pyperclip.paste()
@@ -540,6 +534,10 @@ class WritingToolApp(QtWidgets.QApplication):
         # Settings menu item
         settings_action = self.tray_menu.addAction('Settings')
         settings_action.triggered.connect(self.show_settings)
+
+        # Chat History menu item
+        chat_history_action = self.tray_menu.addAction('Chat History')
+        chat_history_action.triggered.connect(self.show_chat_history)
 
         # Exit menu item
         exit_action = self.tray_menu.addAction('Exit')
@@ -622,8 +620,8 @@ class WritingToolApp(QtWidgets.QApplication):
                 # Get chat history
                 history = response_window.chat_history.copy()
                 
-                # System instruction based on original option
-                system_instruction = "You are a helpful AI assistant. Provide clear and direct responses, maintaining the same format and style as your previous responses. If appropriate, use Markdown formatting to make your response more readable."
+                # System instruction from user settings
+                system_instruction = getattr(self.current_provider, 'chat_system_instruction', "You are a friendly, helpful, compassionate, and endearing AI conversational assistant. Avoid making assumptions or generating harmful, biased, or inappropriate content. When in doubt, do not make up information. Ask the user for clarification if needed. Try not be unnecessarily repetitive in your response. You can, and should as appropriate, use Markdown formatting to make your response nicely readable.")
                 
                 logging.debug('Sending request to AI provider')
                 
@@ -681,6 +679,20 @@ class WritingToolApp(QtWidgets.QApplication):
         self.settings_window.close_signal.connect(self.exit_app)
         self.settings_window.retranslate_ui()
         self.settings_window.show()
+    
+    def show_chat_history(self):
+        """
+        Show the chat history window.
+        """
+        logging.debug('Showing chat history window')
+        try:
+            import ui.ChatHistoryWindow
+            self.chat_history_window = ui.ChatHistoryWindow.ChatHistoryWindow(self)
+            self.chat_history_window.close_signal.connect(lambda: setattr(self, 'chat_history_window', None))
+            self.chat_history_window.show()
+        except Exception as e:
+            logging.error(f'Error showing chat history window: {e}')
+            self.show_message_signal.emit('Error', f'Failed to open chat history: {e}')
 
 
 

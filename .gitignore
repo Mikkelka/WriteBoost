@@ -7,3 +7,5 @@ Windows_and_Linux/config.json
 **/__pycache__
 **/*.mo
 **/pot_files
+windows/saved_chats.json
+windows/dist

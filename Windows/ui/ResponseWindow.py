@@ -48,11 +48,20 @@ class MarkdownTextBrowser(QtWidgets.QTextBrowser):
         new_size = int(self.base_font_size * self.zoom_factor)
         
         # Updated stylesheet with table styling
+        if self.is_user_message:
+            # User message styling - blue/green tint
+            bg_color = '#2a3f5f' if colorMode == 'dark' else '#e3f2fd'
+            border_color = '#4a6fa5' if colorMode == 'dark' else '#90caf9'
+        else:
+            # AI message styling - neutral
+            bg_color = '#333' if colorMode == 'dark' else 'white'
+            border_color = '#555' if colorMode == 'dark' else '#ccc'
+            
         self.setStyleSheet(f"""
             QTextBrowser {{
-                background-color: {('transparent' if self.is_user_message else '#333' if colorMode == 'dark' else 'white')};
+                background-color: {bg_color};
                 color: {'#ffffff' if colorMode == 'dark' else '#000000'};
-                border: {('none' if self.is_user_message else '1px solid ' + ('#555' if colorMode == 'dark' else '#ccc'))};
+                border: 1px solid {border_color};
                 border-radius: 8px;
                 padding: 8px;
                 margin: 0px;
@@ -335,10 +344,17 @@ class ResponseWindow(QtWidgets.QWidget):
         self.app.followup_response_signal.connect(self.handle_followup_response)
         logging.debug('Response signals connected')
 
-        # Set initial size for "Thinking..." state
-        initial_width = 500
-        initial_height = 250
+        # Set initial size to match final size to prevent resize jump
+        initial_width = 900
+        initial_height = 700
         self.resize(initial_width, initial_height)
+        
+        # Center the window on screen immediately
+        screen = QtWidgets.QApplication.primaryScreen()
+        frame_geometry = self.frameGeometry()
+        screen_center = screen.geometry().center()
+        frame_geometry.moveCenter(screen_center)
+        self.move(frame_geometry.topLeft())
                 
     def init_ui(self):
         # Window setup with enhanced flags
@@ -346,7 +362,7 @@ class ResponseWindow(QtWidgets.QWidget):
                           QtCore.Qt.WindowType.WindowCloseButtonHint | 
                           QtCore.Qt.WindowType.WindowMinimizeButtonHint |
                           QtCore.Qt.WindowType.WindowMaximizeButtonHint)
-        self.setMinimumSize(600, 400)
+        self.setMinimumSize(800, 600)
         
         # Main layout setup
         UIUtils.setup_window_and_layout(self)
@@ -396,6 +412,11 @@ class ResponseWindow(QtWidgets.QWidget):
         copy_hint.setStyleSheet(f"color: {'#aaaaaa' if colorMode == 'dark' else '#666666'}; font-size: 14px;")
         copy_bar.addWidget(copy_hint)
         copy_bar.addStretch()
+        
+        save_chat_btn = QtWidgets.QPushButton(_("Save Chat"))
+        save_chat_btn.setStyleSheet(self.get_button_style())
+        save_chat_btn.clicked.connect(self.save_chat)
+        copy_bar.addWidget(save_chat_btn)
         
         copy_md_btn = QtWidgets.QPushButton(_("Copy as Markdown"))
         copy_md_btn.setStyleSheet(self.get_button_style())
@@ -545,6 +566,7 @@ class ResponseWindow(QtWidgets.QWidget):
         self.loading_label.hide()
         self.input_field.setPlaceholderText(_("Ask a follow-up question"))
         self.input_field.setEnabled(True)
+        self.input_field.setFocus()
         
         # Force layout update
         if self.layout():
@@ -602,11 +624,11 @@ class ResponseWindow(QtWidgets.QWidget):
                 max_height
             )
                 
-            # Set reasonable minimum height - increased by 10%
-            final_height = max(600, desired_total_height)  # Increased from 540
+            # Set reasonable minimum height - increased for better viewing
+            final_height = max(700, desired_total_height)  # Increased from 600
                 
-            # Set width to 600px
-            final_width = 600
+            # Set width to 900px for better readability
+            final_width = 900
                 
             # Update both width and height
             self.resize(final_width, final_height)
@@ -622,7 +644,7 @@ class ResponseWindow(QtWidgets.QWidget):
                 
         except Exception as e:
             logging.error(f"Error adjusting window height: {e}")
-            self.resize(600, 600)  # Updated fallback size
+            self.resize(900, 700)  # Updated fallback size
             self._size_initialized = True
 
     @Slot(str)
@@ -631,13 +653,38 @@ class ResponseWindow(QtWidgets.QWidget):
         if not text.strip():
             return
                 
-        # Always ensure chat history is initialized properly
-        self.chat_history = [
-            {"role": "user", "content": f"{self.option}: {self.selected_text}"},
-            {"role": "assistant", "content": text}  # Add initial response immediately
-        ]
+        # Add assistant response to existing chat history, or create new if empty
+        if not self.chat_history:
+            # For direct chat scenarios without initial context
+            self.chat_history = []
+        
+        # Add the assistant response
+        self.chat_history.append({"role": "assistant", "content": text})
         
         self.stop_thinking_animation()
+        
+        # Show the user's initial message first (if it exists)
+        if len(self.chat_history) >= 2:  # Should have user message + assistant response
+            user_message = self.chat_history[0]["content"]
+            
+            # For operations like Summary/Key Points, extract and show just the selected text
+            if user_message.startswith("Original text to"):
+                # Extract the actual text after "Original text to X:\n\n"
+                if ":\n\n" in user_message:
+                    actual_text = user_message.split(":\n\n", 1)[1]
+                    if actual_text.strip():  # Only show if there's actual content
+                        user_display = self.chat_area.add_message(actual_text, is_user=True)
+                        if hasattr(self.app.config, 'response_window_zoom'):
+                            user_display.zoom_factor = self.app.config['response_window_zoom']
+                            user_display._apply_zoom()
+            else:
+                # For custom prompts without selected text, show the actual user question
+                user_display = self.chat_area.add_message(user_message, is_user=True)
+                if hasattr(self.app.config, 'response_window_zoom'):
+                    user_display.zoom_factor = self.app.config['response_window_zoom']
+                    user_display._apply_zoom()
+        
+        # Then show the AI response
         text_display = self.chat_area.add_message(text)
         
         # Update zoom state
@@ -667,6 +714,7 @@ class ResponseWindow(QtWidgets.QWidget):
         
         self.stop_thinking_animation()
         self.input_field.setEnabled(True)
+        self.input_field.setFocus()
         
         # Update window height
         QtCore.QTimer.singleShot(100, self._adjust_window_height)
@@ -686,7 +734,7 @@ class ResponseWindow(QtWidgets.QWidget):
             text_display.zoom_factor = self.current_text_display.zoom_factor
             text_display._apply_zoom()
         
-        self.chat_history.append({"role": "user", "content": message})
+        # Don't add to chat_history here - it's done in process_followup_question
         self.start_thinking_animation()
         self.app.process_followup_question(self, message)
         
@@ -700,6 +748,42 @@ class ResponseWindow(QtWidgets.QWidget):
                 markdown += f"**Assistant**: {msg['content']}\n\n"
                 
         QtWidgets.QApplication.clipboard().setText(markdown)
+    
+    def save_chat(self):
+        """Save the current chat"""
+        if not self.chat_history:
+            QtWidgets.QMessageBox.information(self, "No Chat", "There's no conversation to save yet.")
+            return
+        
+        try:
+            from ui.ChatManager import ChatManager
+            chat_manager = ChatManager()
+            
+            # Generate title from chat history
+            title = chat_manager.generate_chat_title(self.chat_history)
+            
+            # Show input dialog for custom title
+            text, ok = QtWidgets.QInputDialog.getText(
+                self, 
+                'Save Chat', 
+                'Enter a title for this chat:',
+                QtWidgets.QLineEdit.EchoMode.Normal,
+                title
+            )
+            
+            if ok and text.strip():
+                # Save or update chat
+                chat_id = getattr(self, 'saved_chat_id', None)
+                saved_id = chat_manager.save_chat(text.strip(), self.chat_history, chat_id)
+                
+                # Store the ID for future updates
+                self.saved_chat_id = saved_id
+                
+                QtWidgets.QMessageBox.information(self, "Chat Saved", f"Chat saved as: {text.strip()}")
+                
+        except Exception as e:
+            logging.error(f'Error saving chat: {e}')
+            QtWidgets.QMessageBox.warning(self, "Error", f"Failed to save chat: {e}")
         
     def closeEvent(self, event):
         """Handle window close event"""
