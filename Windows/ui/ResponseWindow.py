@@ -512,7 +512,7 @@ class ResponseWindow(QtWidgets.QWidget):
         self.thinking_dropdown.addItem("Light (512)", 512)
         self.thinking_dropdown.addItem("Medium (2048)", 2048)
         self.thinking_dropdown.addItem("Heavy (8192)", 8192)
-        self.thinking_dropdown.setCurrentIndex(0)  # Default to "No Thinking"
+        self.thinking_dropdown.setCurrentIndex(1)  # Default to "Dynamic"
         self.thinking_dropdown.setStyleSheet(f"""
             QComboBox {{
                 padding: 6px;
