@@ -9,3 +9,18 @@ Windows_and_Linux/config.json
 **/pot_files
 windows/saved_chats.json
 windows/dist
+
+# Private instructions and configs
+CLAUDE.local.md
+*.local.md
+config.json
+saved_chats.json
+
+# Build artifacts
+Windows/dist/
+Windows/build/
+*.spec
+
+# Python cache
+*.pyc
+__pycache__/
