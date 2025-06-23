@@ -373,7 +373,9 @@ class ResponseWindow(QtWidgets.QWidget):
         # Top bar with zoom controls
         top_bar = QtWidgets.QHBoxLayout()
         
-        title_label = QtWidgets.QLabel(self.option)
+        # Use appropriate title - "Chat" for direct mode, operation name for text operations
+        display_title = "Chat" if not self.chat_history else self.option
+        title_label = QtWidgets.QLabel(display_title)
         title_label.setStyleSheet(f"font-size: 20px; font-weight: bold; color: {'#ffffff' if colorMode == 'dark' else '#333333'};")
         top_bar.addWidget(title_label)
         
@@ -452,18 +454,95 @@ class ResponseWindow(QtWidgets.QWidget):
         content_layout.addWidget(loading_container)
         self.loading_container = loading_container
         
-        # Start thinking animation
-        self.start_thinking_animation(initial=True)
+        # Only start thinking animation if we have initial content to process
+        if self.chat_history:
+            self.start_thinking_animation(initial=True)
+        else:
+            # Hide loading container for direct chat mode
+            self.loading_container.hide()
         
         # Enhanced chat area with full width
         self.chat_area = ChatContentScrollArea()
         content_layout.addWidget(self.chat_area)
         
+        # Model and thinking controls
+        controls_bar = QtWidgets.QHBoxLayout()
+        
+        # Model selection
+        model_label = QtWidgets.QLabel("Model:")
+        model_label.setStyleSheet(f"color: {'#ffffff' if colorMode == 'dark' else '#333333'}; font-size: 14px; font-weight: bold;")
+        controls_bar.addWidget(model_label)
+        
+        self.model_dropdown = QtWidgets.QComboBox()
+        self.model_dropdown.addItem("Gemini 2.5 Flash", "gemini-2.5-flash")
+        self.model_dropdown.addItem("Gemini 2.5 Flash Lite", "gemini-2.5-flash-lite-preview-06-17")
+        # Set default to current configured model
+        current_model = getattr(self.app.current_provider, 'model_name', 'gemini-2.5-flash')
+        model_index = self.model_dropdown.findData(current_model)
+        if model_index >= 0:
+            self.model_dropdown.setCurrentIndex(model_index)
+        self.model_dropdown.setStyleSheet(f"""
+            QComboBox {{
+                padding: 6px;
+                border: 1px solid {'#777' if colorMode == 'dark' else '#ccc'};
+                border-radius: 6px;
+                background-color: {'#333' if colorMode == 'dark' else 'white'};
+                color: {'#ffffff' if colorMode == 'dark' else '#000000'};
+                font-size: 14px;
+                min-width: 160px;
+            }}
+            QComboBox QAbstractItemView {{
+                background-color: {'#333' if colorMode == 'dark' else 'white'};
+                color: {'#ffffff' if colorMode == 'dark' else '#000000'};
+                selection-background-color: {'#0078d7' if colorMode == 'dark' else '#0078d7'};
+            }}
+        """)
+        controls_bar.addWidget(self.model_dropdown)
+        
+        controls_bar.addSpacing(20)
+        
+        # Thinking level selection
+        thinking_label = QtWidgets.QLabel("Thinking:")
+        thinking_label.setStyleSheet(f"color: {'#ffffff' if colorMode == 'dark' else '#333333'}; font-size: 14px; font-weight: bold;")
+        controls_bar.addWidget(thinking_label)
+        
+        self.thinking_dropdown = QtWidgets.QComboBox()
+        self.thinking_dropdown.addItem("No Thinking", 0)
+        self.thinking_dropdown.addItem("Dynamic", -1)
+        self.thinking_dropdown.addItem("Light (512)", 512)
+        self.thinking_dropdown.addItem("Medium (2048)", 2048)
+        self.thinking_dropdown.addItem("Heavy (8192)", 8192)
+        self.thinking_dropdown.setCurrentIndex(0)  # Default to "No Thinking"
+        self.thinking_dropdown.setStyleSheet(f"""
+            QComboBox {{
+                padding: 6px;
+                border: 1px solid {'#777' if colorMode == 'dark' else '#ccc'};
+                border-radius: 6px;
+                background-color: {'#333' if colorMode == 'dark' else 'white'};
+                color: {'#ffffff' if colorMode == 'dark' else '#000000'};
+                font-size: 14px;
+                min-width: 140px;
+            }}
+            QComboBox QAbstractItemView {{
+                background-color: {'#333' if colorMode == 'dark' else 'white'};
+                color: {'#ffffff' if colorMode == 'dark' else '#000000'};
+                selection-background-color: {'#0078d7' if colorMode == 'dark' else '#0078d7'};
+            }}
+        """)
+        controls_bar.addWidget(self.thinking_dropdown)
+        
+        controls_bar.addStretch()
+        content_layout.addLayout(controls_bar)
+        
         # Input area with enhanced styling
         bottom_bar = QtWidgets.QHBoxLayout()
         
         self.input_field = QtWidgets.QLineEdit()
-        self.input_field.setPlaceholderText(_("Ask a follow-up question")+'...')
+        # Set appropriate placeholder based on whether we have initial content
+        if self.chat_history:
+            self.input_field.setPlaceholderText(_("Ask a follow-up question")+'...')
+        else:
+            self.input_field.setPlaceholderText(_("Ask me anything")+'...')
         self.input_field.setStyleSheet(f"""
             QLineEdit {{
                 padding: 8px;
@@ -728,6 +807,10 @@ class ResponseWindow(QtWidgets.QWidget):
         self.input_field.setEnabled(False)
         self.input_field.clear()
         
+        # Get selected model and thinking level
+        selected_model = self.model_dropdown.currentData()
+        selected_thinking = self.thinking_dropdown.currentData()
+        
         # Add user message and maintain zoom level
         text_display = self.chat_area.add_message(message, is_user=True)
         if hasattr(self, 'current_text_display'):
@@ -736,7 +819,7 @@ class ResponseWindow(QtWidgets.QWidget):
         
         # Don't add to chat_history here - it's done in process_followup_question
         self.start_thinking_animation()
-        self.app.process_followup_question(self, message)
+        self.app.process_followup_question(self, message, selected_model, selected_thinking)
         
     def copy_as_markdown(self):
         """Copy conversation as Markdown"""

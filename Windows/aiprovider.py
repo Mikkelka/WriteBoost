@@ -297,37 +297,48 @@ class GeminiProvider(AIProvider):
             "Get API Key",
             lambda: webbrowser.open("https://aistudio.google.com/app/apikey"))
 
-    def get_response(self, system_instruction: str, prompt: str, return_response: bool = False) -> str:
+    def get_response(self, system_instruction: str, prompt: str, return_response: bool = False, model: str = None, thinking_budget: int = None) -> str:
         """
         Generate content using Gemini with the new genai.Client approach.
         
         Much simpler than the previous HTTP implementation.
         Returns the full response text if return_response is True,
         otherwise emits the text via the output_ready_signal.
+        
+        Args:
+            model: Override the default model (e.g., "gemini-2.5-flash")
+            thinking_budget: Override the default thinking budget (0=no thinking, -1=dynamic, >0=specific amount)
         """
         logging.debug(f"Getting response - API key available: {hasattr(self, 'api_key') and bool(self.api_key)}")
         
         self.close_requested = False
 
         try:
+            # Use provided model or fall back to configured model
+            use_model = model if model else self.model_name
+            # Use provided thinking budget or fall back to default (0)
+            use_thinking = thinking_budget if thinking_budget is not None else 0
+            
             # Debug logging
-            logging.debug(f"Making API call with model: {self.model_name}")
+            logging.debug(f"Making API call with model: {use_model}")
+            logging.debug(f"Using thinking budget: {use_thinking}")
             logging.debug(f"System instruction length: {len(system_instruction)}")
             logging.debug(f"Prompt length: {len(prompt)}")
             
-            # Add current date to system instruction to help Gemini understand today's date
+            # Add current date, model info, and thinking mode to system instruction
             current_date = datetime.now().strftime("%Y-%m-%d")
-            enhanced_system_instruction = f"Today's date is {current_date}. {system_instruction}"
+            thinking_mode = "no thinking" if use_thinking == 0 else ("dynamic thinking" if use_thinking == -1 else f"thinking budget: {use_thinking}")
+            enhanced_system_instruction = f"Today's date is {current_date}. You are running on {use_model} with {thinking_mode}. {system_instruction}"
             
             # Combine system instruction and prompt
             full_prompt = f"{enhanced_system_instruction}\n\n{prompt}"
             
             # Generate content using the new genai.Client approach
             response = self.client.models.generate_content(
-                model=self.model_name,
+                model=use_model,
                 contents=full_prompt,
                 config=types.GenerateContentConfig(
-                    thinking_config=types.ThinkingConfig(thinking_budget=0)  # No thinking for now
+                    thinking_config=types.ThinkingConfig(thinking_budget=use_thinking)
                 )
             )
             
