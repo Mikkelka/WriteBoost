@@ -278,11 +278,11 @@ class GeminiProvider(AIProvider):
             DropdownSetting(
                 name="model_name",
                 display_name="Model",
-                default_value="gemini-2.5-flash-preview-05-20",
+                default_value="gemini-2.5-flash",
                 description="Select Gemini model to use",
                 options=[
-                    ("Gemini 2.0 Flash (very intelligent | fast | 15 uses/min)", "gemini-2.0-flash"),
-                    ("Gemini 2.5 Flash (most intelligent | fast | 10 uses/min)", "gemini-2.5-flash-preview-05-20"),
+                    ("Gemini 2.5 Flash (most intelligent | fast | 10 uses/min)", "gemini-2.5-flash"),
+                    ("Gemini 2.5 Flash Lite (faster | lightweight | 15 uses/min)", "gemini-2.5-flash-lite-preview-06-17"),
                 ]
             ),
             TextSetting(
