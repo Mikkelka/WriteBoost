@@ -3,7 +3,7 @@
     "theme": "plain",
     "providers": {
         "Gemini": {
-            "api_key": "AIzaSyC8wHizERCsxJ2InKaklekwGykjTjLsiPU",
+            "api_key": "AIzaSyCk2hQkPfetcM0Zu493j5bENg7-wzFtWn0",
             "chat_model_name": "gemini-2.5-flash",
             "text_model_name": "gemini-2.5-flash-lite-preview-06-17",
             "chat_system_instruction": "kald mig Mikkel"

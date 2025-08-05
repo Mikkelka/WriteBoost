@@ -6,18 +6,17 @@ import sys
 import threading
 import time
 
-import pyperclip
+from aiprovider import GeminiProvider
 from pynput import keyboard as pykeyboard
+import pyperclip
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtCore import Signal, Slot
 from PySide6.QtGui import QCursor, QGuiApplication
-from PySide6.QtWidgets import QApplication, QMessageBox
-
+from PySide6.QtWidgets import QMessageBox
 import ui.CustomPopupWindow
 import ui.OnboardingWindow
 import ui.ResponseWindow
 import ui.SettingsWindow
-from aiprovider import GeminiProvider
 
 
 def get_resource_path(relative_path):
@@ -34,16 +33,16 @@ class WritingToolApp(QtWidgets.QApplication):
     """
     The main application class for Writing Tools.
     """
+
     output_ready_signal = Signal(str)
     show_message_signal = Signal(str, str)  # a signal for showing message boxes
     hotkey_triggered_signal = Signal()
     followup_response_signal = Signal(str)
 
-
     def __init__(self, argv):
         super().__init__(argv)
         self.current_response_window = None
-        logging.debug('Initializing WritingToolApp')
+        logging.debug("Initializing WritingToolApp")
         self.output_ready_signal.connect(self.replace_text)
         self.show_message_signal.connect(self.show_message_box)
         self.hotkey_triggered_signal.connect(self.on_hotkey_pressed)
@@ -71,32 +70,32 @@ class WritingToolApp(QtWidgets.QApplication):
         self.providers = [GeminiProvider(self)]
 
         if not self.config:
-            logging.debug('No config found, showing onboarding')
+            logging.debug("No config found, showing onboarding")
             self.show_onboarding()
         else:
-            logging.debug('Config found, setting up hotkey and tray icon')
+            logging.debug("Config found, setting up hotkey and tray icon")
 
             # Initialize the current provider, defaulting to Gemini
-            provider_name = self.config.get('provider', 'Gemini')
-            logging.debug(f'Provider name from config: {provider_name}')
+            provider_name = self.config.get("provider", "Gemini")
+            logging.debug(f"Provider name from config: {provider_name}")
 
-            self.current_provider = next((provider for provider in self.providers if provider.provider_name == provider_name), None)
+            self.current_provider = next(
+                (provider for provider in self.providers if provider.provider_name == provider_name), None
+            )
             if not self.current_provider:
-                logging.warning(f'Provider {provider_name} not found. Using default provider.')
+                logging.warning(f"Provider {provider_name} not found. Using default provider.")
                 self.current_provider = self.providers[0]
 
             provider_config = self.config.get("providers", {}).get(provider_name, {})
-            logging.debug(f'Loading provider config: {provider_config}')
+            logging.debug(f"Loading provider config: {provider_config}")
             self.current_provider.load_config(provider_config)
 
             self.create_tray_icon()
             self.register_hotkey()
 
-
         self.recent_triggers = []  # Track recent hotkey triggers
         self.TRIGGER_WINDOW = 1.5  # Time window in seconds
         self.MAX_TRIGGERS = 3  # Max allowed triggers in window
-
 
     def check_trigger_spam(self):
         """
@@ -104,14 +103,13 @@ class WritingToolApp(QtWidgets.QApplication):
         Returns True if spam is detected.
         """
         current_time = time.time()
-        
+
         # Add current trigger
         self.recent_triggers.append(current_time)
-        
+
         # Remove old triggers outside the window
-        self.recent_triggers = [t for t in self.recent_triggers 
-                            if current_time - t <= self.TRIGGER_WINDOW]
-        
+        self.recent_triggers = [t for t in self.recent_triggers if current_time - t <= self.TRIGGER_WINDOW]
+
         # Check if we have too many triggers in the window
         return len(self.recent_triggers) >= self.MAX_TRIGGERS
 
@@ -119,44 +117,44 @@ class WritingToolApp(QtWidgets.QApplication):
         """
         Load the configuration file.
         """
-        self.config_path = os.path.join(os.path.dirname(sys.argv[0]), 'config.json')
-        logging.debug(f'Loading config from {self.config_path}')
+        self.config_path = os.path.join(os.path.dirname(sys.argv[0]), "config.json")
+        logging.debug(f"Loading config from {self.config_path}")
         if os.path.exists(self.config_path):
-            with open(self.config_path, 'r') as f:
+            with open(self.config_path) as f:
                 self.config = json.load(f)
-                logging.debug('Config loaded successfully')
+                logging.debug("Config loaded successfully")
         else:
-            logging.debug('Config file not found')
+            logging.debug("Config file not found")
             self.config = None
 
     def load_options(self):
         """
         Load the options file.
         """
-        self.options_path = get_resource_path('options.json')
-        logging.debug(f'Loading options from {self.options_path}')
+        self.options_path = get_resource_path("options.json")
+        logging.debug(f"Loading options from {self.options_path}")
         if os.path.exists(self.options_path):
-            with open(self.options_path, 'r') as f:
+            with open(self.options_path) as f:
                 self.options = json.load(f)
-                logging.debug('Options loaded successfully')
+                logging.debug("Options loaded successfully")
         else:
-            logging.debug('Options file not found')
+            logging.debug("Options file not found")
             self.options = None
 
     def save_config(self, config):
         """
         Save the configuration file.
         """
-        with open(self.config_path, 'w') as f:
+        with open(self.config_path, "w") as f:
             json.dump(config, f, indent=4)
-            logging.debug('Config saved successfully')
+            logging.debug("Config saved successfully")
         self.config = config
 
     def show_onboarding(self):
         """
         Show the onboarding window for first-time users.
         """
-        logging.debug('Showing onboarding window')
+        logging.debug("Showing onboarding window")
         self.onboarding_window = ui.OnboardingWindow.OnboardingWindow(self)
         self.onboarding_window.close_signal.connect(self.exit_app)
         self.onboarding_window.show()
@@ -165,23 +163,20 @@ class WritingToolApp(QtWidgets.QApplication):
         """
         Create listener for global hotkeys.
         """
-        orig_shortcut = self.config.get('shortcut', 'ctrl+space')
+        orig_shortcut = self.config.get("shortcut", "ctrl+space")
         # Parse the shortcut string, for example ctrl+alt+h -> <ctrl>+<alt>+h
-        shortcut = '+'.join([f'{t}' if len(t) <= 1 else f'<{t}>' for t in orig_shortcut.split('+')])
-        logging.debug(f'Registering global hotkey for shortcut: {shortcut}')
+        shortcut = "+".join([f"{t}" if len(t) <= 1 else f"<{t}>" for t in orig_shortcut.split("+")])
+        logging.debug(f"Registering global hotkey for shortcut: {shortcut}")
         try:
             if self.hotkey_listener is not None:
                 self.hotkey_listener.stop()
 
             def on_activate():
-                logging.debug('triggered hotkey')
+                logging.debug("triggered hotkey")
                 self.hotkey_triggered_signal.emit()  # Emit the signal when hotkey is pressed
 
             # Define the hotkey combination
-            hotkey = pykeyboard.HotKey(
-                pykeyboard.HotKey.parse(shortcut),
-                on_activate
-            )
+            hotkey = pykeyboard.HotKey(pykeyboard.HotKey.parse(shortcut), on_activate)
             self.registered_hotkey = orig_shortcut
 
             # Helper function to standardize key event
@@ -190,35 +185,34 @@ class WritingToolApp(QtWidgets.QApplication):
 
             # Create a listener and store it as an attribute to stop it later
             self.hotkey_listener = pykeyboard.Listener(
-                on_press=for_canonical(hotkey.press),
-                on_release=for_canonical(hotkey.release)
+                on_press=for_canonical(hotkey.press), on_release=for_canonical(hotkey.release)
             )
 
             # Start the listener
             self.hotkey_listener.start()
         except Exception as e:
-            logging.error(f'Failed to register hotkey: {e}')
+            logging.error(f"Failed to register hotkey: {e}")
 
     def register_hotkey(self):
         """
         Register the global hotkey for activating Writing Tools.
         """
-        logging.debug('Registering hotkey')
+        logging.debug("Registering hotkey")
         self.start_hotkey_listener()
-        logging.debug('Hotkey registered')
+        logging.debug("Hotkey registered")
 
     def on_hotkey_pressed(self):
         """
         Handle the hotkey press event.
         """
-        logging.debug('Hotkey pressed')
-        
+        logging.debug("Hotkey pressed")
+
         # Check for spam triggers
         if self.check_trigger_spam():
-            logging.warning('Hotkey spam detected - quitting application')
+            logging.warning("Hotkey spam detected - quitting application")
             self.exit_app()
             return
-            
+
         # Original hotkey handling continues...
         if self.current_provider:
             logging.debug("Cancelling current provider's request")
@@ -233,45 +227,46 @@ class WritingToolApp(QtWidgets.QApplication):
         """
         Show the popup window when the hotkey is pressed.
         """
-        logging.debug('Showing popup window')
+        logging.debug("Showing popup window")
         # First attempt with default sleep
         selected_text = self.get_selected_text()
 
         # Retry with longer sleep if no text captured
         if not selected_text:
-            logging.debug('No text captured, retrying with longer sleep')
+            logging.debug("No text captured, retrying with longer sleep")
             selected_text = self.get_selected_text(sleep_duration=0.5)
 
         logging.debug(f'Selected text: "{selected_text}"')
         try:
             # Check if we have any meaningful text
             if not selected_text.strip():
-                logging.debug('No text selected, opening chat window directly')
+                logging.debug("No text selected, opening chat window directly")
                 # Open ResponseWindow directly for chat
                 response_window = ui.ResponseWindow.ResponseWindow(self, "Chat", None)
                 response_window.show()
                 return
-                
+
             if self.popup_window is not None:
-                logging.debug('Existing popup window found')
+                logging.debug("Existing popup window found")
                 if self.popup_window.isVisible():
-                    logging.debug('Closing existing visible popup window')
+                    logging.debug("Closing existing visible popup window")
                     self.popup_window.close()
                 self.popup_window = None
-            logging.debug('Creating new popup window')
+            logging.debug("Creating new popup window")
             self.popup_window = ui.CustomPopupWindow.CustomPopupWindow(self, selected_text)
 
             # Set the window icon
-            icon_path = get_resource_path(os.path.join('icons', 'app_icon.png'))
-            if os.path.exists(icon_path): self.setWindowIcon(QtGui.QIcon(icon_path))
+            icon_path = get_resource_path(os.path.join("icons", "app_icon.png"))
+            if os.path.exists(icon_path):
+                self.setWindowIcon(QtGui.QIcon(icon_path))
             # Get the screen containing the cursor
             cursor_pos = QCursor.pos()
             screen = QGuiApplication.screenAt(cursor_pos)
             if screen is None:
                 screen = QGuiApplication.primaryScreen()
             screen_geometry = screen.geometry()
-            logging.debug(f'Cursor is on screen: {screen.name()}')
-            logging.debug(f'Screen geometry: {screen_geometry}')
+            logging.debug(f"Cursor is on screen: {screen.name()}")
+            logging.debug(f"Screen geometry: {screen_geometry}")
             # Show the popup to get its size
             self.popup_window.show()
             self.popup_window.adjustSize()
@@ -291,9 +286,9 @@ class WritingToolApp(QtWidgets.QApplication):
             if y + popup_height > screen_geometry.bottom():
                 y = cursor_pos.y() - popup_height - 10  # 10 pixels above cursor
             self.popup_window.move(x, y)
-            logging.debug(f'Popup window moved to position: ({x}, {y})')
+            logging.debug(f"Popup window moved to position: ({x}, {y})")
         except Exception as e:
-            logging.error(f'Error showing popup window: {e}', exc_info=True)
+            logging.error(f"Error showing popup window: {e}", exc_info=True)
 
     def get_selected_text(self, sleep_duration=0.2):
         """
@@ -309,20 +304,20 @@ class WritingToolApp(QtWidgets.QApplication):
         self.clear_clipboard()
 
         # Simulate Ctrl+C
-        logging.debug('Simulating Ctrl+C')
+        logging.debug("Simulating Ctrl+C")
         kbrd = pykeyboard.Controller()
 
         def press_ctrl_c():
             kbrd.press(pykeyboard.Key.ctrl.value)
-            kbrd.press('c')
-            kbrd.release('c')
+            kbrd.press("c")
+            kbrd.release("c")
             kbrd.release(pykeyboard.Key.ctrl.value)
 
         press_ctrl_c()
 
         # Wait for the clipboard to update
         time.sleep(sleep_duration)
-        logging.debug(f'Waited {sleep_duration}s for clipboard')
+        logging.debug(f"Waited {sleep_duration}s for clipboard")
 
         # Get the selected text
         selected_text = pyperclip.paste()
@@ -338,101 +333,104 @@ class WritingToolApp(QtWidgets.QApplication):
         Clear the system clipboard.
         """
         try:
-            pyperclip.copy('')
+            pyperclip.copy("")
         except Exception as e:
-            logging.error(f'Error clearing clipboard: {e}')
+            logging.error(f"Error clearing clipboard: {e}")
 
     def process_option(self, option, selected_text, custom_change=None):
         """
         Process the selected writing option in a separate thread.
         """
-        logging.debug(f'Processing option: {option}')
+        logging.debug(f"Processing option: {option}")
 
         # For Summary, Key Points, Table, and empty text custom prompts, create response window
-        if (option == 'Custom' and not selected_text.strip()) or self.options[option]['open_in_window']:
-            window_title = "Chat" if (option == 'Custom' and not selected_text.strip()) else option
+        if (option == "Custom" and not selected_text.strip()) or self.options[option]["open_in_window"]:
+            window_title = "Chat" if (option == "Custom" and not selected_text.strip()) else option
             self.current_response_window = self.show_response_window(window_title, selected_text)
-            
+
             # Initialize chat history with text/prompt
-            if option == 'Custom' and not selected_text.strip():
+            if option == "Custom" and not selected_text.strip():
                 # For direct AI queries, don't include empty text
                 self.current_response_window.chat_history = []
             else:
                 # For other options, include the original text
                 self.current_response_window.chat_history = [
-                    {
-                        "role": "user",
-                        "content": f"Original text to {option.lower()}:\n\n{selected_text}"
-                    }
+                    {"role": "user", "content": f"Original text to {option.lower()}:\n\n{selected_text}"}
                 ]
         else:
             # Clear any existing response window reference for non-window options
-            if hasattr(self, 'current_response_window'):
-                delattr(self, 'current_response_window')
-                
-        threading.Thread(target=self.process_option_thread, args=(option, selected_text, custom_change), daemon=True).start()
+            if hasattr(self, "current_response_window"):
+                delattr(self, "current_response_window")
+
+        threading.Thread(
+            target=self.process_option_thread, args=(option, selected_text, custom_change), daemon=True
+        ).start()
 
     def process_option_thread(self, option, selected_text, custom_change=None):
-            """
-            Thread function to process the selected writing option using the AI model.
-            """
-            logging.debug(f'Starting processing thread for option: {option}')
-            try:
-                if selected_text.strip() == '':
-                    # No selected text
-                    if option == 'Custom':
-                        prompt = custom_change
-                        system_instruction = getattr(self.current_provider, 'chat_system_instruction', "You are a friendly, helpful, compassionate, and endearing AI conversational assistant. Avoid making assumptions or generating harmful, biased, or inappropriate content. When in doubt, do not make up information. Ask the user for clarification if needed. Try not be unnecessarily repetitive in your response. You can, and should as appropriate, use Markdown formatting to make your response nicely readable.")
-                    else:
-                        self.show_message_signal.emit('Error', 'Please select text to use this option.')
-                        return
+        """
+        Thread function to process the selected writing option using the AI model.
+        """
+        logging.debug(f"Starting processing thread for option: {option}")
+        try:
+            if selected_text.strip() == "":
+                # No selected text
+                if option == "Custom":
+                    prompt = custom_change
+                    system_instruction = getattr(
+                        self.current_provider,
+                        "chat_system_instruction",
+                        "You are a friendly, helpful, compassionate, and endearing AI conversational assistant. Avoid making assumptions or generating harmful, biased, or inappropriate content. When in doubt, do not make up information. Ask the user for clarification if needed. Try not be unnecessarily repetitive in your response. You can, and should as appropriate, use Markdown formatting to make your response nicely readable.",
+                    )
                 else:
-                    selected_prompt = self.options.get(option, ('', ''))
-                    prompt_prefix = selected_prompt['prefix']
-                    system_instruction = selected_prompt['instruction']
-                    if option == 'Custom':
-                        prompt = f"{prompt_prefix}Described change: {custom_change}\n\nText: {selected_text}"
-                    else:
-                        prompt = f"{prompt_prefix}{selected_text}"
-
-                self.output_queue = ""
-
-                logging.debug(f'Getting response from provider for option: {option}')
-
-                if (option == 'Custom' and not selected_text.strip()) or self.options[option]['open_in_window']:
-                    logging.debug('Getting response for window display')
-                    response = self.current_provider.get_response(system_instruction, prompt, return_response=True)
-                    logging.debug(f'Got response of length: {len(response) if response else 0}')
-                    
-                    # For custom prompts with no text, add question to chat history
-                    if option == 'Custom' and not selected_text.strip():
-                        self.current_response_window.chat_history.append({
-                            "role": "user",
-                            "content": custom_change
-                        })
-                    
-                    # Set initial response using QMetaObject.invokeMethod to ensure thread safety
-                    if hasattr(self, 'current_response_window'):
-                        # noinspection PyTypeChecker
-                        QtCore.QMetaObject.invokeMethod(
-                            self.current_response_window,
-                            'set_text',
-                            QtCore.Qt.ConnectionType.QueuedConnection,
-                            QtCore.Q_ARG(str, response)
-                        )
-                        logging.debug('Invoked set_text on response window')
+                    self.show_message_signal.emit("Error", "Please select text to use this option.")
+                    return
+            else:
+                selected_prompt = self.options.get(option, ("", ""))
+                prompt_prefix = selected_prompt["prefix"]
+                system_instruction = selected_prompt["instruction"]
+                if option == "Custom":
+                    prompt = f"{prompt_prefix}Described change: {custom_change}\n\nText: {selected_text}"
                 else:
-                    logging.debug('Getting response for direct replacement')
-                    self.current_provider.get_response(system_instruction, prompt)
-                    logging.debug('Response processed')
+                    prompt = f"{prompt_prefix}{selected_text}"
 
-            except Exception as e:
-                logging.error(f'An error occurred: {e}', exc_info=True)
+            self.output_queue = ""
 
-                if "Resource has been exhausted" in str(e):
-                    self.show_message_signal.emit('Error - Rate Limit Hit', 'Whoops! You\'ve hit the per-minute rate limit of the Gemini API. Please try again in a few moments.\n\nIf this happens often, simply switch to a Gemini model with a higher usage limit in Settings.')
-                else:
-                    self.show_message_signal.emit('Error', f'An error occurred: {e}')
+            logging.debug(f"Getting response from provider for option: {option}")
+
+            if (option == "Custom" and not selected_text.strip()) or self.options[option]["open_in_window"]:
+                logging.debug("Getting response for window display")
+                response = self.current_provider.get_response(system_instruction, prompt, return_response=True)
+                logging.debug(f"Got response of length: {len(response) if response else 0}")
+
+                # For custom prompts with no text, add question to chat history
+                if option == "Custom" and not selected_text.strip():
+                    self.current_response_window.chat_history.append({"role": "user", "content": custom_change})
+
+                # Set initial response using QMetaObject.invokeMethod to ensure thread safety
+                if hasattr(self, "current_response_window"):
+                    # noinspection PyTypeChecker
+                    QtCore.QMetaObject.invokeMethod(
+                        self.current_response_window,
+                        "set_text",
+                        QtCore.Qt.ConnectionType.QueuedConnection,
+                        QtCore.Q_ARG(str, response),
+                    )
+                    logging.debug("Invoked set_text on response window")
+            else:
+                logging.debug("Getting response for direct replacement")
+                self.current_provider.get_response(system_instruction, prompt)
+                logging.debug("Response processed")
+
+        except Exception as e:
+            logging.error(f"An error occurred: {e}", exc_info=True)
+
+            if "Resource has been exhausted" in str(e):
+                self.show_message_signal.emit(
+                    "Error - Rate Limit Hit",
+                    "Whoops! You've hit the per-minute rate limit of the Gemini API. Please try again in a few moments.\n\nIf this happens often, simply switch to a Gemini model with a higher usage limit in Settings.",
+                )
+            else:
+                self.show_message_signal.emit("Error", f"An error occurred: {e}")
 
     @Slot(str, str)
     def show_message_box(self, title, message):
@@ -454,7 +452,7 @@ class WritingToolApp(QtWidgets.QApplication):
         """
         Replaces the text by pasting in the LLM generated text. With "Key Points" and "Summary", invokes a window with the output instead.
         """
-        error_message = 'ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST'
+        error_message = "ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST"
 
         # Confirm new_text exists and is a string
         if new_text and isinstance(new_text, str):
@@ -463,59 +461,60 @@ class WritingToolApp(QtWidgets.QApplication):
 
             # If the new text is the error message, show a message box
             if current_output == error_message:
-                self.show_message_signal.emit('Error', 'The text is incompatible with the requested change.')
+                self.show_message_signal.emit("Error", "The text is incompatible with the requested change.")
                 return
 
             # Check if we're building up to the error message (to prevent partial pasting)
             if len(current_output) <= len(error_message):
-                clean_current = ''.join(current_output.split())
-                clean_error = ''.join(error_message.split())
-                if clean_current == clean_error[:len(clean_current)]:
+                clean_current = "".join(current_output.split())
+                clean_error = "".join(error_message.split())
+                if clean_current == clean_error[: len(clean_current)]:
                     return
 
-            logging.debug('Processing output text')
+            logging.debug("Processing output text")
             try:
                 # For Summary and Key Points, show in response window
-                if hasattr(self, 'current_response_window'):
+                if hasattr(self, "current_response_window"):
                     # Use set_text for initial content, not append_text
-                    self.current_response_window.set_text(self.output_queue.rstrip('\n'))
+                    self.current_response_window.set_text(self.output_queue.rstrip("\n"))
                 else:
                     # For other options, use the original clipboard-based replacement
                     clipboard_backup = pyperclip.paste()
-                    cleaned_text = self.output_queue.rstrip('\n')
+                    cleaned_text = self.output_queue.rstrip("\n")
                     pyperclip.copy(cleaned_text)
-                    
+
                     kbrd = pykeyboard.Controller()
+
                     def press_ctrl_v():
                         kbrd.press(pykeyboard.Key.ctrl.value)
-                        kbrd.press('v')
-                        kbrd.release('v')
+                        kbrd.press("v")
+                        kbrd.release("v")
                         kbrd.release(pykeyboard.Key.ctrl.value)
 
                     press_ctrl_v()
                     time.sleep(0.2)
                     pyperclip.copy(clipboard_backup)
 
-                if not hasattr(self, 'current_response_window'):
+                if not hasattr(self, "current_response_window"):
                     self.output_queue = ""
 
             except Exception as e:
-                logging.error(f'Error processing output: {e}')
+                logging.error(f"Error processing output: {e}")
         else:
-            logging.debug('No new text to process')
+            logging.debug("No new text to process")
 
     def create_tray_icon(self):
         """
         Create the system tray icon for the application.
         """
         if self.tray_icon:
-            logging.debug('Tray icon already exists')
+            logging.debug("Tray icon already exists")
             return
 
-        logging.debug('Creating system tray icon')
-        icon_path = get_resource_path(os.path.join('icons', 'app_icon.png'))
+        logging.debug("Creating system tray icon")
+        icon_path = get_resource_path(os.path.join("icons", "app_icon.png"))
         if not os.path.exists(icon_path):
-            logging.warning(f'Tray icon not found at {icon_path}')
+            logging.warning(f"Tray icon not found at {icon_path}")
             # Use a default icon if not found
             self.tray_icon = QtWidgets.QSystemTrayIcon(self)
         else:
@@ -527,7 +526,7 @@ class WritingToolApp(QtWidgets.QApplication):
 
         self.update_tray_menu()
         self.tray_icon.show()
-        logging.debug('Tray icon displayed')
+        logging.debug("Tray icon displayed")
 
     def update_tray_menu(self):
         """
@@ -540,17 +539,16 @@ class WritingToolApp(QtWidgets.QApplication):
         self.apply_dark_mode_styles(self.tray_menu)
 
         # Settings menu item
-        settings_action = self.tray_menu.addAction('Settings')
+        settings_action = self.tray_menu.addAction("Settings")
         settings_action.triggered.connect(self.show_settings)
 
         # Chat History menu item
-        chat_history_action = self.tray_menu.addAction('Chat History')
+        chat_history_action = self.tray_menu.addAction("Chat History")
         chat_history_action.triggered.connect(self.show_chat_history)
 
         # Exit menu item
-        exit_action = self.tray_menu.addAction('Exit')
+        exit_action = self.tray_menu.addAction("Exit")
         exit_action.triggered.connect(self.exit_app)
-        
 
     @staticmethod
     def apply_dark_mode_styles(menu):
@@ -562,7 +560,6 @@ class WritingToolApp(QtWidgets.QApplication):
         palette.setColor(QtGui.QPalette.Window, QtGui.QColor("#2d2d2d"))  # Dark background
         palette.setColor(QtGui.QPalette.WindowText, QtGui.QColor("#ffffff"))  # White text
         menu.setPalette(palette)
-
 
     """
     The function below (process_followup_question) processes follow-up questions in the chat interface for Summary, Key Points, and Table operations.
@@ -609,33 +606,34 @@ class WritingToolApp(QtWidgets.QApplication):
         """
         Process a follow-up question in the chat window.
         """
-        logging.debug(f'Processing follow-up question: {question} with model: {model}, thinking: {thinking_budget}')
-        
+        logging.debug(f"Processing follow-up question: {question} with model: {model}, thinking: {thinking_budget}")
+
         def process_thread():
-            logging.debug('Starting follow-up processing thread')
+            logging.debug("Starting follow-up processing thread")
             try:
                 # Initialize chat_history if it doesn't exist (for direct chat mode)
-                if not hasattr(response_window, 'chat_history') or response_window.chat_history is None:
+                if not hasattr(response_window, "chat_history") or response_window.chat_history is None:
                     response_window.chat_history = []
 
                 # Add current question to chat history
-                response_window.chat_history.append({
-                    "role": "user",
-                    "content": question
-                })
-                
+                response_window.chat_history.append({"role": "user", "content": question})
+
                 # Get chat history
                 history = response_window.chat_history.copy()
-                
+
                 # System instruction from user settings
-                system_instruction = getattr(self.current_provider, 'chat_system_instruction', "You are a friendly, helpful, compassionate, and endearing AI conversational assistant. Avoid making assumptions or generating harmful, biased, or inappropriate content. When in doubt, do not make up information. Ask the user for clarification if needed. Try not be unnecessarily repetitive in your response. You can, and should as appropriate, use Markdown formatting to make your response nicely readable.")
-                
-                logging.debug('Sending request to AI provider')
-                
+                system_instruction = getattr(
+                    self.current_provider,
+                    "chat_system_instruction",
+                    "You are a friendly, helpful, compassionate, and endearing AI conversational assistant. Avoid making assumptions or generating harmful, biased, or inappropriate content. When in doubt, do not make up information. Ask the user for clarification if needed. Try not be unnecessarily repetitive in your response. You can, and should as appropriate, use Markdown formatting to make your response nicely readable.",
+                )
+
+                logging.debug("Sending request to AI provider")
+
                 # Format conversation for new Google genai client
                 # Build conversation context from history
                 conversation_text = system_instruction + "\n\n"
-                
+
                 # Only add previous conversation if there is any
                 if len(history) > 1:  # More than just the current question
                     for msg in history[:-1]:  # Exclude the current question
@@ -643,69 +641,67 @@ class WritingToolApp(QtWidgets.QApplication):
                             conversation_text += f"User: {msg['content']}\n\n"
                         else:
                             conversation_text += f"Assistant: {msg['content']}\n\n"
-                
+
                 conversation_text += f"User: {question}\n\nAssistant:"
-                
+
                 # Use the provider's get_response method with return_response=True
                 response_text = self.current_provider.get_response(
-                    system_instruction="", 
+                    system_instruction="",
                     prompt=conversation_text,
                     return_response=True,
                     model=model,
-                    thinking_budget=thinking_budget
+                    thinking_budget=thinking_budget,
                 )
 
-                logging.debug(f'Got response of length: {len(response_text)}')
-                
+                logging.debug(f"Got response of length: {len(response_text)}")
+
                 # Add response to chat history
-                response_window.chat_history.append({
-                    "role": "assistant",
-                    "content": response_text
-                })
-                
+                response_window.chat_history.append({"role": "assistant", "content": response_text})
+
                 # Emit response via signal
                 self.followup_response_signal.emit(response_text)
 
             except Exception as e:
-                logging.error(f'Error processing follow-up question: {e}', exc_info=True)
+                logging.error(f"Error processing follow-up question: {e}", exc_info=True)
 
                 if "Resource has been exhausted" in str(e):
-                    self.show_message_signal.emit('Error - Rate Limit Hit', 'Whoops! You\'ve hit the per-minute rate limit of the Gemini API. Please try again in a few moments.\n\nIf this happens often, simply switch to a Gemini model with a higher usage limit in Settings.')
+                    self.show_message_signal.emit(
+                        "Error - Rate Limit Hit",
+                        "Whoops! You've hit the per-minute rate limit of the Gemini API. Please try again in a few moments.\n\nIf this happens often, simply switch to a Gemini model with a higher usage limit in Settings.",
+                    )
                     self.followup_response_signal.emit("Sorry, an error occurred while processing your question.")
                 else:
-                    self.show_message_signal.emit('Error', f'An error occurred: {e}')
+                    self.show_message_signal.emit("Error", f"An error occurred: {e}")
                     self.followup_response_signal.emit("Sorry, an error occurred while processing your question.")
 
         # Start the thread
         threading.Thread(target=process_thread, daemon=True).start()
 
     def show_settings(self, providers_only=False):
-
         """
         Show the settings window.
         """
-        logging.debug('Showing settings window')
+        logging.debug("Showing settings window")
         # Always create a new settings window to handle providers_only correctly
         self.settings_window = ui.SettingsWindow.SettingsWindow(self, providers_only=providers_only)
         self.settings_window.close_signal.connect(self.exit_app)
         self.settings_window.retranslate_ui()
         self.settings_window.show()
-    
+
     def show_chat_history(self):
         """
         Show the chat history window.
         """
-        logging.debug('Showing chat history window')
+        logging.debug("Showing chat history window")
         try:
             import ui.ChatHistoryWindow
+
             self.chat_history_window = ui.ChatHistoryWindow.ChatHistoryWindow(self)
-            self.chat_history_window.close_signal.connect(lambda: setattr(self, 'chat_history_window', None))
+            self.chat_history_window.close_signal.connect(lambda: setattr(self, "chat_history_window", None))
             self.chat_history_window.show()
         except Exception as e:
-            logging.error(f'Error showing chat history window: {e}')
-            self.show_message_signal.emit('Error', f'Failed to open chat history: {e}')
-
-
+            logging.error(f"Error showing chat history window: {e}")
+            self.show_message_signal.emit("Error", f"Failed to open chat history: {e}")
 
     def setup_ctrl_c_listener(self):
         """
@@ -719,6 +715,7 @@ class WritingToolApp(QtWidgets.QApplication):
         self.ctrl_c_timer = QtCore.QTimer()
         self.ctrl_c_timer.start(100)
         self.ctrl_c_timer.timeout.connect(lambda: None)
+
     def handle_sigint(self, signum, frame):
         """
         Handle the SIGINT signal (Ctrl+C) to exit the app gracefully.
@@ -730,8 +727,8 @@ class WritingToolApp(QtWidgets.QApplication):
         """
         Exit the application.
         """
-        logging.debug('Stopping the listener')
+        logging.debug("Stopping the listener")
         if self.hotkey_listener is not None:
             self.hotkey_listener.stop()
-        logging.debug('Exiting application')
+        logging.debug("Exiting application")
         self.quit()

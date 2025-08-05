@@ -1,10 +1,7 @@
-import os
-import sys
-
 from aiprovider import AIProvider
 from PySide6 import QtCore, QtWidgets
 
-from ui.UIUtils import UIUtils, colorMode
+from ui.UIUtils import UIUtils
 
 
 class SettingsWindow(QtWidgets.QWidget):
@@ -12,6 +9,7 @@ class SettingsWindow(QtWidgets.QWidget):
     The settings window for the application.
     Now with scrolling support for better usability on smaller screens.
     """
+
     close_signal = QtCore.Signal()
 
     def __init__(self, app, providers_only=False):
@@ -26,7 +24,6 @@ class SettingsWindow(QtWidgets.QWidget):
         self.shortcut_input = None
         self.init_ui()
         self.retranslate_ui()
-
 
     def retranslate_ui(self):
         self.setWindowTitle("Settings")
@@ -70,7 +67,9 @@ class SettingsWindow(QtWidgets.QWidget):
 
         # Add provider settings
         for setting in provider.settings:
-            setting.set_value(self.app.config["providers"][provider.provider_name].get(setting.name, setting.default_value))
+            setting.set_value(
+                self.app.config["providers"][provider.provider_name].get(setting.name, setting.default_value)
+            )
             setting.render_to_layout(self.current_provider_layout)
 
         layout.addLayout(self.current_provider_layout)
@@ -80,7 +79,7 @@ class SettingsWindow(QtWidgets.QWidget):
         Initialize the user interface for the settings window.
         Compact dark design focused on essentials.
         """
-        self.setWindowTitle('Settings')
+        self.setWindowTitle("Settings")
         # Smaller, more compact window
         self.setMinimumWidth(450)
         self.setFixedWidth(450)
@@ -109,7 +108,7 @@ class SettingsWindow(QtWidgets.QWidget):
             shortcut_label.setStyleSheet("font-size: 14px; color: #ffffff; margin-top: 10px;")
             main_layout.addWidget(shortcut_label)
 
-            self.shortcut_input = QtWidgets.QLineEdit(self.app.config.get('shortcut', 'ctrl+space'))
+            self.shortcut_input = QtWidgets.QLineEdit(self.app.config.get("shortcut", "ctrl+space"))
             self.shortcut_input.setStyleSheet("""
                 font-size: 14px;
                 padding: 8px;
@@ -168,27 +167,24 @@ class SettingsWindow(QtWidgets.QWidget):
         # Compact window size
         self.resize(450, 380)
 
-
     def save_settings(self):
         """Save the current settings."""
-        self.app.config['locale'] = 'en'
+        self.app.config["locale"] = "en"
 
         if not self.providers_only:
-            self.app.config['shortcut'] = self.shortcut_input.text()
-            self.app.config['theme'] = 'plain'  # Force dark theme
+            self.app.config["shortcut"] = self.shortcut_input.text()
+            self.app.config["theme"] = "plain"  # Force dark theme
         else:
             self.app.create_tray_icon()
 
-        self.app.config['streaming'] = False
-        self.app.config['provider'] = 'Gemini'
+        self.app.config["streaming"] = False
+        self.app.config["provider"] = "Gemini"
 
         self.app.providers[0].save_config()  # Only Gemini provider
 
         self.app.current_provider = self.app.providers[0]  # Only Gemini provider
 
-        self.app.current_provider.load_config(
-            self.app.config.get("providers", {}).get('Gemini', {})
-        )
+        self.app.current_provider.load_config(self.app.config.get("providers", {}).get("Gemini", {}))
 
         self.app.register_hotkey()
         self.providers_only = False

@@ -1,0 +1,22 @@
+[tool.ruff]
+line-length = 120
+target-version = "py38"
+
+[tool.ruff.lint]
+# Enable pycodestyle (E), Pyflakes (F), import sorting (I), pyupgrade (UP)
+select = ["E", "F", "I", "UP"]
+# Ignore some common issues that might be too strict
+ignore = [
+    "E501",  # Line too long (handled by formatter)
+    "E203",  # Whitespace before ':'
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.ruff.lint.isort]
+force-single-line = false
+force-sort-within-sections = true
