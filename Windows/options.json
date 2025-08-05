@@ -54,8 +54,8 @@
     "open_in_window": true
   },
   "Overs\u00e6t til Dansk": {
-    "prefix": "Make this change to the following text:\n\n",
-    "instruction": "Overs\u00e6t til teksten til dansk. ",
+    "prefix": "",
+    "instruction": "Overs\u00e6t til teksten til dansk og output kun den overs\u00e6ttede tekst",
     "icon": "icons/magnifying-glass",
     "open_in_window": false
   }
