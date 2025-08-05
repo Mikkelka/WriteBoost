@@ -297,20 +297,20 @@ class GeminiProvider(AIProvider):
                     ("Gemini 2.5 Flash (most intelligent | fast | 10 uses/min)", "gemini-2.5-flash"),
                     (
                         "Gemini 2.5 Flash Lite (faster | lightweight | 15 uses/min)",
-                        "gemini-2.5-flash-lite-preview-06-17",
+                        "gemini-2.5-flash-lite",
                     ),
                 ],
             ),
             DropdownSetting(
                 name="text_model_name",
                 display_name="Text Operations Model",
-                default_value="gemini-2.5-flash-lite-preview-06-17",
+                default_value="gemini-2.5-flash-lite",
                 description="Model for text operations (Proofread, Rewrite, etc.)",
                 options=[
                     ("Gemini 2.5 Flash (most intelligent | fast | 10 uses/min)", "gemini-2.5-flash"),
                     (
                         "Gemini 2.5 Flash Lite (faster | lightweight | 15 uses/min)",
-                        "gemini-2.5-flash-lite-preview-06-17",
+                        "gemini-2.5-flash-lite",
                     ),
                 ],
             ),
@@ -366,7 +366,7 @@ class GeminiProvider(AIProvider):
                 use_model = getattr(self, "chat_model_name", "gemini-2.5-flash")
             else:
                 # Text operations (return_response=False) use text model
-                use_model = getattr(self, "text_model_name", "gemini-2.5-flash-lite-preview-06-17")
+                use_model = getattr(self, "text_model_name", "gemini-2.5-flash-lite")
 
             # Use provided thinking budget or fall back to default (0 = no thinking)
             use_thinking = thinking_budget if thinking_budget is not None else 0

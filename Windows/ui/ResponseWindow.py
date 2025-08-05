@@ -481,7 +481,7 @@ class ResponseWindow(QtWidgets.QWidget):
 
         self.model_dropdown = QtWidgets.QComboBox()
         self.model_dropdown.addItem("Gemini 2.5 Flash", "gemini-2.5-flash")
-        self.model_dropdown.addItem("Gemini 2.5 Flash Lite", "gemini-2.5-flash-lite-preview-06-17")
+        self.model_dropdown.addItem("Gemini 2.5 Flash Lite", "gemini-2.5-flash-lite")
         # Set default to current configured chat model
         current_model = getattr(self.app.current_provider, "chat_model_name", "gemini-2.5-flash")
         model_index = self.model_dropdown.findData(current_model)
