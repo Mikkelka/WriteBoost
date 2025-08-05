@@ -7,18 +7,15 @@ import sys
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QDialog,
     QHBoxLayout,
     QLabel,
-    QLineEdit,
-    QPlainTextEdit,
     QPushButton,
-    QRadioButton,
     QVBoxLayout,
-    QWidget,
 )
 
 from ui.UIUtils import ThemeBackground, colorMode
+from ui.ButtonEditDialog import ButtonEditDialog, DEFAULT_OPTIONS_JSON
+from ui.DraggableButton import DraggableButton
 
 _ = lambda x: x
 
@@ -31,319 +28,6 @@ def get_resource_path(relative_path):
     except AttributeError:
         base_path = os.path.dirname(sys.argv[0])
     return os.path.join(base_path, relative_path)
-
-
-################################################################################
-# Default `options.json` content to restore when the user presses "Reset"
-################################################################################
-DEFAULT_OPTIONS_JSON = r"""{
-  "Proofread": {
-    "prefix": "Proofread this:\n\n",
-    "instruction": "You are a grammar proofreading assistant.\nOutput ONLY the corrected text without any additional comments.\nMaintain the original text structure and writing style.\nRespond in the same language as the input (e.g., English US, French).\nDo not answer or respond to the user's text content.\nIf the text is absolutely incompatible with this (e.g., totally random gibberish), output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
-    "icon": "icons/magnifying-glass",
-    "open_in_window": false
-  },
-  "Rewrite": {
-    "prefix": "Rewrite this:\n\n",
-    "instruction": "You are a writing assistant.\nRewrite the text provided by the user to improve phrasing.\nOutput ONLY the rewritten text without additional comments.\nRespond in the same language as the input (e.g., English US, French).\nDo not answer or respond to the user's text content.\nIf the text is absolutely incompatible with proofreading (e.g., totally random gibberish), output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
-    "icon": "icons/rewrite",
-    "open_in_window": false
-  },
-  "Friendly": {
-    "prefix": "Make this more friendly:\n\n",
-    "instruction": "You are a writing assistant.\nRewrite the text provided by the user to be more friendly.\nOutput ONLY the friendly text without additional comments.\nRespond in the same language as the input (e.g., English US, French).\nDo not answer or respond to the user's text content.\nIf the text is absolutely incompatible with rewriting (e.g., totally random gibberish), output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
-    "icon": "icons/smiley-face",
-    "open_in_window": false
-  },
-  "Professional": {
-    "prefix": "Make this more professional:\n\n",
-    "instruction": "You are a writing assistant.\nRewrite the text provided by the user to be more professional. Output ONLY the professional text without additional comments.\nRespond in the same language as the input (e.g., English US, French).\nDo not answer or respond to the user's text content.\nIf the text is absolutely incompatible with rewriting (e.g., totally random gibberish), output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
-    "icon": "icons/briefcase",
-    "open_in_window": false
-  },
-  "Concise": {
-    "prefix": "Make this more concise:\n\n",
-    "instruction": "You are a writing assistant.\nRewrite the text provided by the user to be more concise.\nOutput ONLY the concise text without additional comments.\nRespond in the same language as the input (e.g., English US, French).\nDo not answer or respond to the user's text content.\nIf the text is absolutely incompatible with rewriting (e.g., totally random gibberish), output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
-    "icon": "icons/concise",
-    "open_in_window": false
-  },
-  "Table": {
-    "prefix": "Convert this into a table:\n\n",
-    "instruction": "You are an assistant that converts text provided by the user into a Markdown table.\nOutput ONLY the table without additional comments.\nRespond in the same language as the input (e.g., English US, French).\nDo not answer or respond to the user's text content.\nIf the text is completely incompatible with this with conversion, output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
-    "icon": "icons/table",
-    "open_in_window": true
-  },
-  "Key Points": {
-    "prefix": "Extract key points from this:\n\n",
-    "instruction": "You are an assistant that extracts key points from text provided by the user. Output ONLY the key points without additional comments.\n\nYou should use Markdown formatting (lists, bold, italics, codeblocks, etc.) as appropriate to make it quite legible and readable.\n\nDon't be repetitive or too verbose.\nRespond in the same language as the input (e.g., English US, French).\nDo not answer or respond to the user's text content.\nIf the text is absolutely incompatible with extracting key points (e.g., totally random gibberish), output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
-    "icon": "icons/keypoints",
-    "open_in_window": true
-  },
-  "Summary": {
-    "prefix": "Summarize this:\n\n",
-    "instruction": "You are a summarization assistant.\nProvide a succinct summary of the text provided by the user.\nThe summary should be succinct yet encompass all the key insightful points.\n\nTo make it quite legible and readable, you should use Markdown formatting (bold, italics, codeblocks...) as appropriate.\nYou should also add a little line spacing between your paragraphs as appropriate.\nAnd only if appropriate, you could also use headings (only the very small ones), lists, tables, etc.\n\nDon't be repetitive or too verbose.\nOutput ONLY the summary without additional comments.\nRespond in the same language as the input (e.g., English US, French).\nDo not answer or respond to the user's text content.\nIf the text is absolutely incompatible with summarisation (e.g., totally random gibberish), output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
-    "icon": "icons/summary",
-    "open_in_window": true
-  },
-  "Custom": {
-    "prefix": "Make this change to the following text:\n\n",
-    "instruction": "You are a writing and coding assistant. You MUST make the user\\'s described change to the text or code provided by the user. Output ONLY the appropriately modified text or code without additional comments. Respond in the same language as the input (e.g., English US, French). Do not answer or respond to the user\\'s text content. If the text or code is absolutely incompatible with the requested change, output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
-    "icon": "icons/summary",
-    "open_in_window": false
-  }
-}"""
-
-
-class ButtonEditDialog(QDialog):
-    """
-    Dialog for editing or creating a button's properties
-    (name/title, system instruction, open_in_window, etc.).
-    """
-
-    def __init__(self, parent=None, button_data=None, title="Edit Button"):
-        super().__init__(parent)
-        self.button_data = (
-            button_data
-            if button_data
-            else {
-                "prefix": "Make this change to the following text:\n\n",
-                "instruction": "",
-                "icon": "icons/magnifying-glass",
-                "open_in_window": False,
-            }
-        )
-        self.setWindowTitle(title)
-        self.init_ui()
-
-    def init_ui(self):
-        layout = QVBoxLayout(self)
-
-        # Name
-        name_label = QLabel("Button Name:")
-        name_label.setStyleSheet(f"color: {'#fff' if colorMode == 'dark' else '#333'}; font-weight: bold;")
-        self.name_input = QLineEdit()
-        self.name_input.setStyleSheet(f"""
-            QLineEdit {{
-                padding: 8px;
-                border: 1px solid {"#777" if colorMode == "dark" else "#ccc"};
-                border-radius: 8px;
-                background-color: {"#333" if colorMode == "dark" else "white"};
-                color: {"#fff" if colorMode == "dark" else "#000"};
-            }}
-        """)
-        if "name" in self.button_data:
-            self.name_input.setText(self.button_data["name"])
-        layout.addWidget(name_label)
-        layout.addWidget(self.name_input)
-
-        # Instruction (changed to a multiline QPlainTextEdit)
-        instruction_label = QLabel("What should your AI do with your selected text? (System Instruction)")
-        instruction_label.setStyleSheet(f"color: {'#fff' if colorMode == 'dark' else '#333'}; font-weight: bold;")
-        self.instruction_input = QPlainTextEdit()
-        self.instruction_input.setStyleSheet(f"""
-            QPlainTextEdit {{
-                padding: 8px;
-                border: 1px solid {"#777" if colorMode == "dark" else "#ccc"};
-                border-radius: 8px;
-                background-color: {"#333" if colorMode == "dark" else "white"};
-                color: {"#fff" if colorMode == "dark" else "#000"};
-            }}
-        """)
-        self.instruction_input.setPlainText(self.button_data.get("instruction", ""))
-        self.instruction_input.setMinimumHeight(100)
-        self.instruction_input.setPlaceholderText("""Examples:
-    - Fix / improve / explain this code.
-    - Make it funny.
-    - Add emojis!
-    - Roast this!
-    - Translate to English.
-    - Make the text title case.
-    - If it's all caps, make it all small, and vice-versa.
-    - Write a reply to this.
-    - Analyse potential biases in this news article.""")
-        layout.addWidget(instruction_label)
-        layout.addWidget(self.instruction_input)
-
-        # open_in_window
-        display_label = QLabel("How should your AI response be shown?")
-        display_label.setStyleSheet(f"color: {'#fff' if colorMode == 'dark' else '#333'}; font-weight: bold;")
-        layout.addWidget(display_label)
-
-        radio_layout = QHBoxLayout()
-        self.replace_radio = QRadioButton("Replace the selected text")
-        self.window_radio = QRadioButton("In a pop-up window (with follow-up support)")
-        for r in (self.replace_radio, self.window_radio):
-            r.setStyleSheet(f"color: {'#fff' if colorMode == 'dark' else '#333'};")
-
-        self.replace_radio.setChecked(not self.button_data.get("open_in_window", False))
-        self.window_radio.setChecked(self.button_data.get("open_in_window", False))
-
-        radio_layout.addWidget(self.replace_radio)
-        radio_layout.addWidget(self.window_radio)
-        layout.addLayout(radio_layout)
-
-        # OK & Cancel
-        btn_layout = QHBoxLayout()
-        ok_button = QPushButton("OK")
-        cancel_button = QPushButton("Cancel")
-        for btn in (ok_button, cancel_button):
-            btn.setStyleSheet(f"""
-                QPushButton {{
-                    background-color: {"#444" if colorMode == "dark" else "#f0f0f0"};
-                    color: {"#fff" if colorMode == "dark" else "#000"};
-                    border: 1px solid {"#666" if colorMode == "dark" else "#ccc"};
-                    border-radius: 5px;
-                    padding: 8px;
-                    min-width: 100px;
-                }}
-                QPushButton:hover {{
-                    background-color: {"#555" if colorMode == "dark" else "#e0e0e0"};
-                }}
-            """)
-        btn_layout.addWidget(ok_button)
-        btn_layout.addWidget(cancel_button)
-        layout.addLayout(btn_layout)
-
-        ok_button.clicked.connect(self.accept)
-        cancel_button.clicked.connect(self.reject)
-
-        self.setStyleSheet(f"""
-            QDialog {{
-                background-color: {"#222" if colorMode == "dark" else "#f5f5f5"};
-                border-radius: 10px;
-            }}
-        """)
-
-    def get_button_data(self):
-        return {
-            "name": self.name_input.text(),
-            "prefix": "Make this change to the following text:\n\n",
-            # Retrieve multiline text
-            "instruction": self.instruction_input.toPlainText(),
-            "icon": "icons/custom",
-            "open_in_window": self.window_radio.isChecked(),
-        }
-
-
-class DraggableButton(QtWidgets.QPushButton):
-    def __init__(self, parent_window, key, text):
-        super().__init__(text, parent_window)
-        self.window = parent_window
-        self.key = key
-        self.drag_start_position = None
-        self.setAcceptDrops(True)
-        self.icon_container = None
-
-        # Enable mouse tracking and hover events, and styled background
-        self.setMouseTracking(True)
-        self.setAttribute(QtCore.Qt.WA_Hover, True)
-        self.setAttribute(QtCore.Qt.WA_StyledBackground, True)
-
-        # Use a dynamic property "hover" (default False)
-        self.setProperty("hover", False)
-
-        # Set fixed size (adjust as needed)
-        self.setFixedSize(120, 40)
-
-        # Define base style using the dynamic property instead of the :hover pseudo-class
-        self.base_style = f"""
-            QPushButton {{
-                background-color: {"#444" if colorMode == "dark" else "white"};
-                border: 1px solid {"#666" if colorMode == "dark" else "#ccc"};
-                border-radius: 8px;
-                padding: 10px;
-                font-size: 14px;
-                text-align: left;
-                color: {"#fff" if colorMode == "dark" else "#000"};
-            }}
-            QPushButton[hover="true"] {{
-                background-color: {"#555" if colorMode == "dark" else "#f0f0f0"};
-            }}
-        """
-        self.setStyleSheet(self.base_style)
-        logging.debug("DraggableButton initialized")
-
-    def enterEvent(self, event):
-        self.setProperty("hover", True)
-        self.style().unpolish(self)
-        self.style().polish(self)
-        super().enterEvent(event)
-
-    def leaveEvent(self, event):
-        self.setProperty("hover", False)
-        self.style().unpolish(self)
-        self.style().polish(self)
-        super().leaveEvent(event)
-
-    def mousePressEvent(self, event):
-        if event.button() == QtCore.Qt.LeftButton:
-            self.drag_start_position = event.pos()
-            event.accept()
-            return
-        super().mousePressEvent(event)
-
-    def mouseMoveEvent(self, event):
-        if not (event.buttons() & QtCore.Qt.LeftButton) or not self.drag_start_position:
-            return
-
-        distance = (event.pos() - self.drag_start_position).manhattanLength()
-        if distance < QtWidgets.QApplication.startDragDistance():
-            return
-
-        drag = QtGui.QDrag(self)
-        mime_data = QtCore.QMimeData()
-        idx = self.window.button_widgets.index(self)
-        mime_data.setData("application/x-button-index", str(idx).encode())
-        drag.setMimeData(mime_data)
-
-        pixmap = self.grab()
-        drag.setPixmap(pixmap)
-        drag.setHotSpot(event.pos())
-
-        self.drag_start_position = None
-        drop_action = drag.exec_(QtCore.Qt.MoveAction)
-        logging.debug(f"Drag completed with action: {drop_action}")
-
-    def dragEnterEvent(self, event):
-        if event.mimeData().hasFormat("application/x-button-index"):
-            event.acceptProposedAction()
-            self.setStyleSheet(
-                self.base_style
-                + """
-                QPushButton {
-                    border: 2px dashed #666;
-                }
-            """
-            )
-        else:
-            event.ignore()
-
-    def dragLeaveEvent(self, event):
-        self.setStyleSheet(self.base_style)
-        event.accept()
-
-    def dropEvent(self, event):
-        if not event.mimeData().hasFormat("application/x-button-index"):
-            event.ignore()
-            return
-
-        source_idx = int(event.mimeData().data("application/x-button-index").data().decode())
-        target_idx = self.window.button_widgets.index(self)
-
-        if source_idx != target_idx:
-            bw = self.window.button_widgets
-            bw[source_idx], bw[target_idx] = bw[target_idx], bw[source_idx]
-            self.window.rebuild_grid_layout()
-            self.window.update_json_from_grid()
-
-        self.setStyleSheet(self.base_style)
-        event.setDropAction(QtCore.Qt.MoveAction)
-        event.acceptProposedAction()
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        if self.icon_container:
-            self.icon_container.setGeometry(0, 0, self.width(), self.height())
 
 
 class ButtonEditWindow(QtWidgets.QWidget):
@@ -608,7 +292,8 @@ class ButtonEditWindow(QtWidgets.QWidget):
             )
 
             # Reload app options
-            self.app.load_options()
+            self.app.config_manager.load_options()
+            self.app.options = self.app.config_manager.options
 
     def edit_button_clicked(self, btn):
         """User clicked the small pencil icon over a button."""
@@ -641,7 +326,8 @@ class ButtonEditWindow(QtWidgets.QWidget):
             )
 
             # Reload app options
-            self.app.load_options()
+            self.app.config_manager.load_options()
+            self.app.options = self.app.config_manager.options
 
     def delete_button_clicked(self, btn):
         """Handle deletion of a button."""
@@ -675,7 +361,8 @@ class ButtonEditWindow(QtWidgets.QWidget):
                 )
 
                 # Reload app options
-                self.app.load_options()
+                self.app.config_manager.load_options()
+                self.app.options = self.app.config_manager.options
 
             except Exception as e:
                 logging.error(f"Error deleting button: {e}")
@@ -710,7 +397,8 @@ class ButtonEditWindow(QtWidgets.QWidget):
                 )
 
                 # Reload app options
-                self.app.load_options()
+                self.app.config_manager.load_options()
+                self.app.options = self.app.config_manager.options
 
             except Exception as e:
                 logging.error(f"Error resetting options.json: {e}")
@@ -731,4 +419,42 @@ class ButtonEditWindow(QtWidgets.QWidget):
         self.save_options(new_data)
         
         # Reload app options
-        self.app.load_options()
+        self.app.config_manager.load_options()
+        self.app.options = self.app.config_manager.options
+
+    def swap_buttons(self, source_key, target_key):
+        """Swap two buttons in the grid and update JSON order"""
+        # Find the buttons in our list
+        source_idx = target_idx = -1
+        for i, btn in enumerate(self.button_widgets):
+            if btn.key == source_key:
+                source_idx = i
+            elif btn.key == target_key:
+                target_idx = i
+
+        if source_idx != -1 and target_idx != -1:
+            # Swap in our list
+            self.button_widgets[source_idx], self.button_widgets[target_idx] = (
+                self.button_widgets[target_idx], 
+                self.button_widgets[source_idx]
+            )
+            
+            # Rebuild the UI and update JSON
+            self.rebuild_grid_layout()
+            self.update_json_from_grid()
+
+    def edit_button(self, key):
+        """Edit button - called from DraggableButton context menu"""
+        # Find the button
+        for btn in self.button_widgets:
+            if btn.key == key:
+                self.edit_button_clicked(btn)
+                break
+
+    def delete_button(self, key):
+        """Delete button - called from DraggableButton context menu"""
+        # Find the button
+        for btn in self.button_widgets:
+            if btn.key == key:
+                self.delete_button_clicked(btn)
+                break

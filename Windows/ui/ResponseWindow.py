@@ -2,312 +2,16 @@ import logging
 import os
 import sys
 
-import markdown2
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtCore import Qt, Slot
-from PySide6.QtWidgets import QScrollArea
 
 from ui.UIUtils import UIUtils, colorMode
+from ui.MarkdownDisplay import MarkdownTextBrowser, get_resource_path
+from ui.ChatScrollArea import ChatContentScrollArea
+from ui.ChatMessageManager import ChatMessageManager
 
 _ = lambda x: x
 
-
-def get_resource_path(relative_path):
-    """Get absolute path to resource, works for dev and for PyInstaller"""
-    try:
-        # PyInstaller creates a temp folder and stores path in _MEIPASS
-        base_path = sys._MEIPASS
-    except AttributeError:
-        base_path = os.path.dirname(sys.argv[0])
-    return os.path.join(base_path, relative_path)
-
-
-class MarkdownTextBrowser(QtWidgets.QTextBrowser):
-    """Enhanced text browser for displaying Markdown content with improved sizing"""
-
-    def __init__(self, parent=None, is_user_message=False):
-        super().__init__(parent)
-        self.setReadOnly(True)
-        self.setOpenExternalLinks(True)
-        self.zoom_factor = 1.2
-        self.base_font_size = 14
-        self.is_user_message = is_user_message
-
-        # Critical: Remove scrollbars to prevent extra space
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-
-        # Set size policies to prevent unwanted expansion
-        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
-
-        self._apply_zoom()
-
-    def _apply_zoom(self):
-        new_size = int(self.base_font_size * self.zoom_factor)
-
-        # Updated stylesheet with table styling
-        if self.is_user_message:
-            # User message styling - blue/green tint
-            bg_color = "#2a3f5f" if colorMode == "dark" else "#e3f2fd"
-            border_color = "#4a6fa5" if colorMode == "dark" else "#90caf9"
-        else:
-            # AI message styling - neutral
-            bg_color = "#333" if colorMode == "dark" else "white"
-            border_color = "#555" if colorMode == "dark" else "#ccc"
-
-        self.setStyleSheet(f"""
-            QTextBrowser {{
-                background-color: {bg_color};
-                color: {"#ffffff" if colorMode == "dark" else "#000000"};
-                border: 1px solid {border_color};
-                border-radius: 8px;
-                padding: 8px;
-                margin: 0px;
-                font-size: {new_size}px;
-                line-height: 1.3;
-                width: 100%;
-            }}
-
-            /* Table styles */
-            table {{
-                border-collapse: collapse;
-                width: 100%;
-                margin: 10px 0;
-            }}
-            
-            th, td {{
-                border: 1px solid {"#555" if colorMode == "dark" else "#ccc"};
-                padding: 8px;
-                text-align: left;
-            }}
-            
-            th {{
-                background-color: {"#444" if colorMode == "dark" else "#f5f5f5"};
-                font-weight: bold;
-            }}
-            
-            tr:nth-child(even) {{
-                background-color: {"#3a3a3a" if colorMode == "dark" else "#f9f9f9"};
-            }}
-            
-            tr:hover {{
-                background-color: {"#484848" if colorMode == "dark" else "#f0f0f0"};
-            }}
-        """)
-
-    def _update_size(self):
-        # Calculate correct document width
-        available_width = self.viewport().width() - 16  # Account for padding
-        self.document().setTextWidth(available_width)
-
-        # Get precise content height
-        doc_size = self.document().size()
-        content_height = doc_size.height()
-
-        # Add minimal padding for content
-        new_height = int(content_height + 16)  # Reduced total padding
-
-        if self.minimumHeight() != new_height:
-            self.setMinimumHeight(new_height)
-            self.setMaximumHeight(new_height)  # Force fixed height
-
-            # Update scroll area if needed
-            scroll_area = self.get_scroll_area()
-            if scroll_area:
-                scroll_area.update_content_height()
-
-    def wheelEvent(self, event):
-        if event.modifiers() == Qt.KeyboardModifier.ControlModifier:
-            delta = event.angleDelta().y()
-            # Get the main response window
-            parent = self.parent()
-            while parent and not isinstance(parent, ResponseWindow):
-                parent = parent.parent()
-
-            if parent:
-                if delta > 0:
-                    parent.zoom_all_messages("in")
-                else:
-                    parent.zoom_all_messages("out")
-                event.accept()
-        else:
-            # Pass wheel events to parent for scrolling
-            if self.parent():
-                self.parent().wheelEvent(event)
-
-    def zoom_in(self):
-        old_factor = self.zoom_factor
-        self.zoom_factor = min(3.0, self.zoom_factor * 1.1)
-        if old_factor != self.zoom_factor:
-            self._apply_zoom()
-            self._update_size()
-
-    def zoom_out(self):
-        old_factor = self.zoom_factor
-        self.zoom_factor = max(0.5, self.zoom_factor / 1.1)
-        if old_factor != self.zoom_factor:
-            self._apply_zoom()
-            self._update_size()
-
-    def reset_zoom(self):
-        old_factor = self.zoom_factor
-        self.zoom_factor = 1.2  # Reset to default zoom
-        if old_factor != self.zoom_factor:
-            self._apply_zoom()
-            self._update_size()
-
-    def get_scroll_area(self):
-        """Find the parent ChatContentScrollArea"""
-        parent = self.parent()
-        while parent:
-            if isinstance(parent, ChatContentScrollArea):
-                return parent
-            parent = parent.parent()
-        return None
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        self._update_size()
-
-
-class ChatContentScrollArea(QScrollArea):
-    """Improved scrollable container for chat messages with dynamic sizing and proper spacing"""
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.content_widget = None
-        self.layout = None
-        self.setup_ui()
-
-    def setup_ui(self):
-        self.setWidgetResizable(True)
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-
-        # Main container widget with explicit size policy
-        self.content_widget = QtWidgets.QWidget()
-        self.content_widget.setSizePolicy(
-            QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.MinimumExpanding
-        )
-        self.setWidget(self.content_widget)
-
-        # Main layout with improved spacing
-        self.layout = QtWidgets.QVBoxLayout(self.content_widget)
-        self.layout.setSpacing(8)  # Reduced spacing between messages
-        self.layout.setContentsMargins(15, 15, 15, 15)  # Adjusted margins
-        self.layout.addStretch()
-
-        # Enhanced scroll area styling
-        self.setStyleSheet("""
-            QScrollArea {
-                background-color: transparent;
-                border: none;
-            }
-            QScrollArea > QWidget > QWidget {
-                background-color: transparent;
-            }
-            QScrollBar:vertical {
-                background-color: transparent;
-                width: 12px;
-                margin: 0px;
-            }
-            QScrollBar::handle:vertical {
-                background-color: rgba(128, 128, 128, 0.5);
-                min-height: 20px;
-                border-radius: 6px;
-                margin: 2px;
-            }
-            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
-                height: 0px;
-            }
-        """)
-
-    def add_message(self, text, is_user=False):
-        # Remove bottom stretch
-        self.layout.takeAt(self.layout.count() - 1)
-
-        # Create message container with improved width
-        msg_container = QtWidgets.QWidget()
-        msg_container.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
-
-        # Message layout with minimal margins
-        msg_layout = QtWidgets.QVBoxLayout(msg_container)
-        msg_layout.setContentsMargins(0, 0, 0, 0)
-        msg_layout.setSpacing(0)
-
-        # Create text display with updated width
-        text_display = MarkdownTextBrowser(is_user_message=is_user)
-
-        # Enable tables extension in markdown2
-        html = markdown2.markdown(text, extras=["tables"])
-        text_display.setHtml(html)
-
-        # Calculate proper text display size using full width
-        text_display.document().setTextWidth(self.width() - 20)
-        doc_size = text_display.document().size()
-        text_display.setMinimumHeight(int(doc_size.height() + 16))
-
-        msg_layout.addWidget(text_display)
-
-        self.layout.addWidget(msg_container)
-        self.layout.addStretch()
-
-        if hasattr(self.parent(), "current_text_display"):
-            self.parent().current_text_display = text_display
-
-        QtCore.QTimer.singleShot(50, self.post_message_updates)
-
-        return text_display
-
-    def post_message_updates(self):
-        """Handle updates after adding a message with proper timing"""
-        self.scroll_to_bottom()
-        if isinstance(self.parent(), ResponseWindow):
-            self.parent()._adjust_window_height()
-
-    def update_content_height(self):
-        """Recalculate total content height with improved spacing calculation"""
-        total_height = 0
-
-        # Calculate height of all messages
-        for i in range(self.layout.count() - 1):  # Skip stretch item
-            item = self.layout.itemAt(i)
-            if item and item.widget():
-                widget_height = item.widget().sizeHint().height()
-                total_height += widget_height
-
-        # Add spacing between messages and margins
-        total_height += self.layout.spacing() * (self.layout.count() - 2)  # Message spacing
-        total_height += self.layout.contentsMargins().top() + self.layout.contentsMargins().bottom()
-
-        # Set minimum height with some padding
-        self.content_widget.setMinimumHeight(total_height + 10)
-
-        # Update window height if needed
-        if isinstance(self.parent(), ResponseWindow):
-            self.parent()._adjust_window_height()
-
-    def scroll_to_bottom(self):
-        """Smooth scroll to bottom of content"""
-        vsb = self.verticalScrollBar()
-        vsb.setValue(vsb.maximum())
-
-    def resizeEvent(self, event):
-        """Handle resize events with improved width calculations"""
-        super().resizeEvent(event)
-
-        # Update width for all message displays
-        available_width = self.width() - 40  # Account for margins
-        for i in range(self.layout.count() - 1):  # Skip stretch item
-            item = self.layout.itemAt(i)
-            if item and item.widget():
-                container = item.widget()
-                text_display = container.layout().itemAt(0).widget()
-                if isinstance(text_display, MarkdownTextBrowser):
-                    # Recalculate text width and height
-                    text_display.document().setTextWidth(available_width)
-                    doc_size = text_display.document().size()
-                    text_display.setMinimumHeight(int(doc_size.height() + 20))  # Reduced padding
 
 
 class ResponseWindow(QtWidgets.QWidget):
@@ -324,7 +28,7 @@ class ResponseWindow(QtWidgets.QWidget):
         self.loading_label = None
         self.loading_container = None
         self.chat_area = None
-        self.chat_history = []
+        self.message_manager = ChatMessageManager([])
 
         # Setup thinking animation with full range of dots
         self.thinking_timer = QtCore.QTimer(self)
@@ -335,7 +39,7 @@ class ResponseWindow(QtWidgets.QWidget):
 
         self.init_ui()
         logging.debug("Connecting response signals")
-        self.app.followup_response_signal.connect(self.handle_followup_response)
+        self.app.conversation_manager.followup_response_signal.connect(self.handle_followup_response)
         logging.debug("Response signals connected")
 
         # Set initial size to match final size to prevent resize jump
@@ -370,7 +74,7 @@ class ResponseWindow(QtWidgets.QWidget):
         top_bar = QtWidgets.QHBoxLayout()
 
         # Use appropriate title - "Chat" for direct mode, operation name for text operations
-        display_title = "Chat" if not self.chat_history else self.option
+        display_title = "Chat" if not self.message_manager.has_messages() else self.option
         title_label = QtWidgets.QLabel(display_title)
         title_label.setStyleSheet(
             f"font-size: 20px; font-weight: bold; color: {'#ffffff' if colorMode == 'dark' else '#333333'};"
@@ -459,7 +163,7 @@ class ResponseWindow(QtWidgets.QWidget):
         self.loading_container = loading_container
 
         # Only start thinking animation if we have initial content to process
-        if self.chat_history:
+        if self.message_manager.has_messages():
             self.start_thinking_animation(initial=True)
         else:
             # Hide loading container for direct chat mode
@@ -547,7 +251,7 @@ class ResponseWindow(QtWidgets.QWidget):
 
         self.input_field = QtWidgets.QLineEdit()
         # Set appropriate placeholder based on whether we have initial content
-        if self.chat_history:
+        if self.message_manager.has_messages():
             self.input_field.setPlaceholderText(_("Ask a follow-up question") + "...")
         else:
             self.input_field.setPlaceholderText(_("Ask me anything") + "...")
@@ -590,22 +294,6 @@ class ResponseWindow(QtWidgets.QWidget):
         content_layout.addLayout(bottom_bar)
 
     # Method to get first response text
-    def get_first_response_text(self):
-        """Get the first model response text from chat history"""
-        try:
-            # Check chat history exists
-            if not self.chat_history:
-                return None
-
-            # Find first assistant message
-            for msg in self.chat_history:
-                if msg["role"] == "assistant":
-                    return msg["content"]
-
-            return None
-        except Exception as e:
-            logging.error(f"Error getting first response: {e}")
-            return None
 
     def copy_first_response(self):
         """Copy only the first model response as Markdown"""
@@ -743,33 +431,19 @@ class ResponseWindow(QtWidgets.QWidget):
         if not text.strip():
             return
 
-        # Add assistant response to existing chat history, or create new if empty
-        if not self.chat_history:
-            # For direct chat scenarios without initial context
-            self.chat_history = []
-
         # Add the assistant response
-        self.chat_history.append({"role": "assistant", "content": text})
+        self.message_manager.add_assistant_message(text)
 
         self.stop_thinking_animation()
 
         # Show the user's initial message first (if it exists)
-        if len(self.chat_history) >= 2:  # Should have user message + assistant response
-            user_message = self.chat_history[0]["content"]
-
-            # For operations like Summary/Key Points, extract and show just the selected text
-            if user_message.startswith("Original text to"):
-                # Extract the actual text after "Original text to X:\n\n"
-                if ":\n\n" in user_message:
-                    actual_text = user_message.split(":\n\n", 1)[1]
-                    if actual_text.strip():  # Only show if there's actual content
-                        user_display = self.chat_area.add_message(actual_text, is_user=True)
-                        if hasattr(self.app.config, "response_window_zoom"):
-                            user_display.zoom_factor = self.app.config["response_window_zoom"]
-                            user_display._apply_zoom()
-            else:
-                # For custom prompts without selected text, show the actual user question
-                user_display = self.chat_area.add_message(user_message, is_user=True)
+        chat_history = self.message_manager.get_chat_history()
+        if len(chat_history) >= 2:  # Should have user message + assistant response
+            user_message = chat_history[0]["content"]
+            display_text = self.message_manager.extract_user_display_text(user_message)
+            
+            if display_text:
+                user_display = self.chat_area.add_message(display_text, is_user=True)
                 if hasattr(self.app.config, "response_window_zoom"):
                     user_display.zoom_factor = self.app.config["response_window_zoom"]
                     user_display._apply_zoom()
@@ -796,8 +470,9 @@ class ResponseWindow(QtWidgets.QWidget):
                 text_display.zoom_factor = self.current_text_display.zoom_factor
                 text_display._apply_zoom()
 
-            if len(self.chat_history) > 0 and self.chat_history[-1]["role"] != "assistant":
-                self.chat_history.append({"role": "assistant", "content": response_text})
+            chat_history = self.message_manager.get_chat_history()
+            if len(chat_history) > 0 and chat_history[-1]["role"] != "assistant":
+                self.message_manager.add_assistant_message(response_text)
 
         self.stop_thinking_animation()
         self.input_field.setEnabled(True)
@@ -825,24 +500,18 @@ class ResponseWindow(QtWidgets.QWidget):
             text_display.zoom_factor = self.current_text_display.zoom_factor
             text_display._apply_zoom()
 
-        # Don't add to chat_history here - it's done in process_followup_question
+        # Don't add to message history here - it's done in process_followup_question
         self.start_thinking_animation()
         self.app.process_followup_question(self, message, selected_model, selected_thinking)
 
     def copy_as_markdown(self):
         """Copy conversation as Markdown"""
         markdown = ""
-        for msg in self.chat_history:
-            if msg["role"] == "user":
-                markdown += f"**User**: {msg['content']}\n\n"
-            else:
-                markdown += f"**Assistant**: {msg['content']}\n\n"
-
-        QtWidgets.QApplication.clipboard().setText(markdown)
+        self.message_manager.copy_conversation_as_markdown()
 
     def save_chat(self):
         """Save the current chat"""
-        if not self.chat_history:
+        if not self.message_manager.has_messages():
             QtWidgets.QMessageBox.information(self, "No Chat", "There's no conversation to save yet.")
             return
 
@@ -852,7 +521,7 @@ class ResponseWindow(QtWidgets.QWidget):
             chat_manager = ChatManager()
 
             # Generate title from chat history
-            title = chat_manager.generate_chat_title(self.chat_history)
+            title = chat_manager.generate_chat_title(self.message_manager.get_chat_history())
 
             # Show input dialog for custom title
             text, ok = QtWidgets.QInputDialog.getText(
@@ -862,7 +531,7 @@ class ResponseWindow(QtWidgets.QWidget):
             if ok and text.strip():
                 # Save or update chat
                 chat_id = getattr(self, "saved_chat_id", None)
-                saved_id = chat_manager.save_chat(text.strip(), self.chat_history, chat_id)
+                saved_id = chat_manager.save_chat(text.strip(), self.message_manager.get_chat_history(), chat_id)
 
                 # Store the ID for future updates
                 self.saved_chat_id = saved_id
@@ -880,7 +549,7 @@ class ResponseWindow(QtWidgets.QWidget):
             self.app.config["response_window_zoom"] = self.current_text_display.zoom_factor
             self.app.save_config(self.app.config)
 
-        self.chat_history = []
+        self.message_manager.set_chat_history([])
 
         if hasattr(self.app, "current_response_window"):
             delattr(self.app, "current_response_window")
