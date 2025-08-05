@@ -20,7 +20,9 @@ cd Windows && python main.py
 ### Building Executable
 ```bash
 # Build with PyInstaller spec file (from Windows directory)
-cd Windows && python pyinstaller-build-script.py
+cd Windows && python pyinstaller-build-script.py 
+# or
+cd Windows; python pyinstaller-build-script.py
 ```
 
 The spec file creates a single-file executable with optimized exclusions and proper resource bundling.

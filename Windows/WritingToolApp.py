@@ -17,6 +17,7 @@ import ui.CustomPopupWindow
 import ui.OnboardingWindow
 import ui.ResponseWindow
 import ui.SettingsWindow
+import ui.ButtonEditWindow
 
 
 def get_resource_path(relative_path):
@@ -57,6 +58,7 @@ class WritingToolApp(QtWidgets.QApplication):
         self.tray_icon = None
         self.tray_menu = None
         self.settings_window = None
+        self.button_edit_window = None
         self.registered_hotkey = None
         self.output_queue = ""
         self.last_replace = 0
@@ -546,6 +548,10 @@ class WritingToolApp(QtWidgets.QApplication):
         chat_history_action = self.tray_menu.addAction("Chat History")
         chat_history_action.triggered.connect(self.show_chat_history)
 
+        # Edit Buttons menu item
+        edit_buttons_action = self.tray_menu.addAction("Edit Buttons")
+        edit_buttons_action.triggered.connect(self.show_button_edit)
+
         # Exit menu item
         exit_action = self.tray_menu.addAction("Exit")
         exit_action.triggered.connect(self.exit_app)
@@ -702,6 +708,18 @@ class WritingToolApp(QtWidgets.QApplication):
         except Exception as e:
             logging.error(f"Error showing chat history window: {e}")
             self.show_message_signal.emit("Error", f"Failed to open chat history: {e}")
+
+    def show_button_edit(self):
+        """
+        Show the button edit window.
+        """
+        logging.debug("Showing button edit window")
+        try:
+            self.button_edit_window = ui.ButtonEditWindow.ButtonEditWindow(self)
+            self.button_edit_window.show()
+        except Exception as e:
+            logging.error(f"Error showing button edit window: {e}")
+            self.show_message_signal.emit("Error", f"Failed to open button edit window: {e}")
 
     def setup_ctrl_c_listener(self):
         """

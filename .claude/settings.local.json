@@ -14,7 +14,8 @@
       "Bash(mv:*)",
       "Bash(pip3 install:*)",
       "Bash(python:*)",
-      "Bash(ruff check:*)"
+      "Bash(ruff check:*)",
+      "Bash(del:*)"
     ],
     "deny": []
   }
