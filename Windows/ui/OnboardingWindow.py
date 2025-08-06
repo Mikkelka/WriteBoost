@@ -91,10 +91,21 @@ class OnboardingWindow(QtWidgets.QWidget):
         self.content_layout.addWidget(next_button)
 
     def on_next_clicked(self):
-        self.shortcut = self.shortcut_input.text()
-        logging.debug(f"User selected shortcut: {self.shortcut}")
-        self.app.config = {"shortcut": self.shortcut}
-        self.show_api_key_input()
+        try:
+            self.shortcut = self.shortcut_input.text()
+            logging.debug(f"User selected shortcut: {self.shortcut}")
+            # Initialize config with shortcut and save it
+            self.app.config = {"shortcut": self.shortcut}
+            logging.debug("About to save config...")
+            self.app.save_config(self.app.config)
+            logging.debug("Config saved, showing API key input...")
+            self.show_api_key_input()
+        except Exception as e:
+            logging.error(f"Error in on_next_clicked: {e}")
+            import traceback
+            logging.error(f"Traceback: {traceback.format_exc()}")
+            # Continue anyway
+            self.show_api_key_input()
 
     def show_api_key_input(self):
         self.app.show_settings(providers_only=True)

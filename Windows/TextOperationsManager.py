@@ -55,9 +55,19 @@ class TextOperationsManager(QtCore.QObject):
 
             # Get the selected text
             selected_text = pyperclip.paste()
+            logging.debug(f"Clipboard content after Ctrl+C: '{selected_text}'")
+            logging.debug(f"Original clipboard backup: '{clipboard_backup}'")
             
-            # Check if we got new text (different from backup)
-            if selected_text != clipboard_backup:
+            # Check if we got meaningful text
+            if selected_text and selected_text.strip():
+                # We got some text, assume it's selected text
+                logging.debug(f"Got text from clipboard: '{selected_text}'")
+                # Restore the clipboard and return success
+                pyperclip.copy(clipboard_backup)
+                return selected_text
+            elif selected_text != clipboard_backup:
+                # We got different text (even if empty), could be valid selection
+                logging.debug(f"Got different text from clipboard: '{selected_text}'")
                 # Restore the clipboard and return success
                 pyperclip.copy(clipboard_backup)
                 return selected_text

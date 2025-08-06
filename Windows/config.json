@@ -1,12 +1,11 @@
 {
     "shortcut": "ctrl+space",
-    "theme": "plain",
     "providers": {
         "Gemini": {
             "api_key": "AIzaSyCk2hQkPfetcM0Zu493j5bENg7-wzFtWn0",
             "chat_model_name": "gemini-2.5-flash",
-            "text_model_name": "gemini-2.5-flash-lite-preview-06-17",
-            "chat_system_instruction": "kald mig Mikkel"
+            "text_model_name": "gemini-2.5-flash-lite",
+            "chat_system_instruction": "You are a friendly, helpful, compassionate, and endearing AI conversational assistant. Avoid making assumptions or generating harmful, biased, or inappropriate content. When in doubt, do not make up information. Ask the user for clarification if needed. Try not be unnecessarily repetitive in your response. You can, and should as appropriate, use Markdown formatting to make your response nicely readable."
         }
     },
     "locale": "en",

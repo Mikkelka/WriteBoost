@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import signal
@@ -129,9 +130,18 @@ class WritingToolApp(QtWidgets.QApplication):
         self.config_path = os.path.join(os.path.dirname(sys.argv[0]), "config.json")
         logging.debug(f"Loading config from {self.config_path}")
         if os.path.exists(self.config_path):
-            with open(self.config_path) as f:
-                self.config = json.load(f)
-                logging.debug("Config loaded successfully")
+            try:
+                with open(self.config_path) as f:
+                    content = f.read().strip()
+                    if content:
+                        self.config = json.loads(content)
+                        logging.debug("Config loaded successfully")
+                    else:
+                        logging.debug("Config file is empty")
+                        self.config = None
+            except (json.JSONDecodeError, IOError) as e:
+                logging.warning(f"Config file is corrupted or unreadable: {e}")
+                self.config = None
         else:
             logging.debug("Config file not found")
             self.config = None
@@ -154,10 +164,24 @@ class WritingToolApp(QtWidgets.QApplication):
         """
         Save the configuration file.
         """
-        with open(self.config_path, "w") as f:
-            json.dump(config, f, indent=4)
-            logging.debug("Config saved successfully")
-        self.config = config
+        try:
+            # Ensure config_path is set
+            if not hasattr(self, 'config_path') or not self.config_path:
+                self.config_path = os.path.join(os.path.dirname(sys.argv[0]), "config.json")
+                logging.debug(f"Set config_path to: {self.config_path}")
+                
+            logging.debug(f"Saving config to: {self.config_path}")
+            logging.debug(f"Config content: {config}")
+            
+            with open(self.config_path, "w") as f:
+                json.dump(config, f, indent=4)
+                logging.debug("Config saved successfully")
+            self.config = config
+        except Exception as e:
+            logging.error(f"Error saving config: {e}")
+            import traceback
+            logging.error(f"Traceback: {traceback.format_exc()}")
+            raise
 
     def show_onboarding(self):
         """

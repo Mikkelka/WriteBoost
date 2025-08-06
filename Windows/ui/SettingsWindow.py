@@ -1,3 +1,5 @@
+import logging
+
 from aiprovider import AIProvider
 from PySide6 import QtCore, QtWidgets
 
@@ -169,26 +171,68 @@ class SettingsWindow(QtWidgets.QWidget):
 
     def save_settings(self):
         """Save the current settings."""
-        self.app.config["locale"] = "en"
+        try:
+            logging.debug("=== Starting save_settings ===")
+            
+            # Ensure config is initialized
+            if self.app.config is None:
+                logging.debug("Config was None, initializing...")
+                self.app.config = {}
+            else:
+                logging.debug(f"Config exists: {self.app.config}")
+                
+            self.app.config["locale"] = "en"
+            logging.debug("Set locale")
 
-        if not self.providers_only:
-            self.app.config["shortcut"] = self.shortcut_input.text()
-            self.app.config["theme"] = "plain"  # Force dark theme
-        else:
-            self.app.create_tray_icon()
+            if not self.providers_only:
+                self.app.config["shortcut"] = self.shortcut_input.text()
+                self.app.config["theme"] = "plain"  # Force dark theme
+                logging.debug("Set shortcut and theme")
+            else:
+                logging.debug("Creating tray icon...")
+                self.app.create_tray_icon()
 
-        self.app.config["streaming"] = False
-        self.app.config["provider"] = "Gemini"
+            self.app.config["streaming"] = False
+            self.app.config["provider"] = "Gemini"
+            logging.debug("Set streaming and provider")
 
-        self.app.providers[0].save_config()  # Only Gemini provider
+            logging.debug("About to call provider.save_config()...")
+            self.app.providers[0].save_config()  # Only Gemini provider - this now saves to disk
+            logging.debug("Provider.save_config() completed")
 
-        self.app.current_provider = self.app.providers[0]  # Only Gemini provider
+            self.app.current_provider = self.app.providers[0]  # Only Gemini provider
+            logging.debug("Set current provider")
 
-        self.app.current_provider.load_config(self.app.config.get("providers", {}).get("Gemini", {}))
+            logging.debug("About to load provider config...")
+            self.app.current_provider.load_config(self.app.config.get("providers", {}).get("Gemini", {}))
+            logging.debug("Provider config loaded")
 
-        self.app.register_hotkey()
-        self.providers_only = False
-        self.close()
+            logging.debug("Registering hotkey...")
+            self.app.register_hotkey()
+            logging.debug("Hotkey registered")
+            
+            # Emit close signal if this was a providers-only setup
+            if self.providers_only:
+                logging.debug("Emitting close signal for providers_only setup")
+                self.close_signal.emit()
+                
+            self.providers_only = False
+            logging.debug("Closing window...")
+            self.close()
+            logging.debug("=== save_settings completed successfully ===")
+            
+        except Exception as e:
+            logging.error(f"ERROR in save_settings: {e}")
+            import traceback
+            logging.error(f"Traceback: {traceback.format_exc()}")
+            # Try to close anyway
+            try:
+                if self.providers_only:
+                    self.close_signal.emit()
+                self.providers_only = False  
+                self.close()
+            except Exception as e2:
+                logging.error(f"ERROR trying to close after error: {e2}")
 
     def closeEvent(self, event):
         """Handle window close event."""

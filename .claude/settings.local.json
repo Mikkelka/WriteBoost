@@ -16,7 +16,10 @@
       "Bash(python:*)",
       "Bash(ruff check:*)",
       "Bash(del:*)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(tasklist:*)",
+      "Bash(taskkill:*)",
+      "Bash(cat:*)"
     ],
     "deny": []
   }

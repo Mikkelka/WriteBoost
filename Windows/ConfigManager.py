@@ -33,9 +33,18 @@ class ConfigManager:
         self.config_path = os.path.join(os.path.dirname(sys.argv[0]), "config.json")
         logging.debug(f"Loading config from {self.config_path}")
         if os.path.exists(self.config_path):
-            with open(self.config_path) as f:
-                self.config = json.load(f)
-                logging.debug("Config loaded successfully")
+            try:
+                with open(self.config_path) as f:
+                    content = f.read().strip()
+                    if content:
+                        self.config = json.loads(content)
+                        logging.debug("Config loaded successfully")
+                    else:
+                        logging.debug("Config file is empty")
+                        self.config = None
+            except (json.JSONDecodeError, IOError) as e:
+                logging.warning(f"Config file is corrupted or unreadable: {e}")
+                self.config = None
         else:
             logging.debug("Config file not found")
             self.config = None

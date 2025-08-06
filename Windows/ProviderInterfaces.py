@@ -93,14 +93,46 @@ class AIProvider(ABC):
 
         self.after_load()
 
-    def save_config(self) -> dict:
+    def save_config(self):
         """
-        Save the provider's configuration from the UI widgets.
+        Save provider configuration settings into the main config file.
         """
-        config = {}
-        for setting in self.settings:
-            config[setting.name] = setting.get_value()
-        return config
+        try:
+            logging.debug(f"=== Provider {self.provider_name} save_config starting ===")
+            
+            config = {}
+            for setting in self.settings:
+                try:
+                    value = setting.get_value()
+                    config[setting.name] = value
+                    logging.debug(f"Setting {setting.name} = {value}")
+                except Exception as e:
+                    logging.error(f"Error getting value for setting {setting.name}: {e}")
+                    raise
+            
+            logging.debug(f"Provider config collected: {config}")
+            
+            # Ensure providers section exists in app config
+            if self.app.config is None:
+                logging.warning("App config was None, initializing...")
+                self.app.config = {}
+            
+            if "providers" not in self.app.config:
+                logging.debug("Creating providers section in app config")
+                self.app.config["providers"] = {}
+                
+            self.app.config["providers"][self.provider_name] = config
+            logging.debug(f"Added provider config to app config: {self.app.config}")
+            
+            logging.debug("About to call app.save_config...")
+            self.app.save_config(self.app.config)
+            logging.debug("=== Provider save_config completed successfully ===")
+            
+        except Exception as e:
+            logging.error(f"ERROR in provider save_config: {e}")
+            import traceback
+            logging.error(f"Traceback: {traceback.format_exc()}")
+            raise
 
     @abstractmethod
     def after_load(self):
