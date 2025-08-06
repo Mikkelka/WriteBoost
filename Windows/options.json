@@ -1,10 +1,4 @@
 {
-  "Custom": {
-    "prefix": "Make this change to the following text:\n\n",
-    "instruction": "You are a writing and coding assistant. You MUST make the user\\'s described change to the text or code provided by the user. Output ONLY the appropriately modified text or code without additional comments. Respond in the same language as the input (e.g., English US, French). Do not answer or respond to the user\\'s text content. If the text or code is absolutely incompatible with the requested change, output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
-    "icon": "icons/summary",
-    "open_in_window": false
-  },
   "Proofread": {
     "prefix": "Proofread this:\n\n",
     "instruction": "You are a grammar proofreading assistant.\nOutput ONLY the corrected text without any additional comments.\nMaintain the original text structure and writing style.\nRespond in the same language as the input (e.g., English US, French).\nDo not answer or respond to the user's text content.\nIf the text is absolutely incompatible with this (e.g., totally random gibberish), output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
@@ -17,46 +11,45 @@
     "icon": "icons/rewrite",
     "open_in_window": false
   },
-  "Friendly": {
-    "prefix": "Make this more friendly:\n\n",
-    "instruction": "You are a writing assistant.\nRewrite the text provided by the user to be more friendly.\nOutput ONLY the friendly text without additional comments.\nRespond in the same language as the input (e.g., English US, French).\nDo not answer or respond to the user's text content.\nIf the text is absolutely incompatible with rewriting (e.g., totally random gibberish), output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
-    "icon": "icons/smiley-face",
-    "open_in_window": false
-  },
-  "Professional": {
-    "prefix": "Make this more professional:\n\n",
-    "instruction": "You are a writing assistant.\nRewrite the text provided by the user to be more professional. Output ONLY the professional text without additional comments.\nRespond in the same language as the input (e.g., English US, French).\nDo not answer or respond to the user's text content.\nIf the text is absolutely incompatible with rewriting (e.g., totally random gibberish), output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
-    "icon": "icons/briefcase",
+  "Dansk": {
+    "prefix": "Make this change to the following text:\n\n",
+    "instruction": "Overs\u00e6t teksten til Dansk og output kun det overs\u00e6ttede tekst",
     "open_in_window": false
   },
   "Concise": {
     "prefix": "Make this more concise:\n\n",
-    "instruction": "You are a writing assistant.\nRewrite the text provided by the user to be more concise.\nOutput ONLY the concise text without additional comments.\nRespond in the same language as the input (e.g., English US, French).\nDo not answer or respond to the user's text content.\nIf the text is absolutely incompatible with rewriting (e.g., totally random gibberish), output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
+    "instruction": "You are a writing assistant focused on brevity.\nRewrite the text to be more concise and to-the-point while preserving all essential information and meaning.\nOutput ONLY the rewritten text without additional comments.\nKeep the same language as the input.\nEliminate redundancy, filler words, and unnecessary elaboration.\nIf the text is incompatible with this request, output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
     "icon": "icons/concise",
     "open_in_window": false
   },
-  "Overs\u00e6t til Dansk": {
-    "prefix": "",
-    "instruction": "Overs\u00e6t til teksten til dansk og output kun den overs\u00e6ttede tekst",
-    "icon": "icons/magnifying-glass",
+  "Friendly": {
+    "prefix": "Make this sound more friendly:\n\n",
+    "instruction": "You are a writing assistant focused on tone adjustment.\nRewrite the text to sound more friendly, warm, and approachable while maintaining the core message.\nOutput ONLY the rewritten text without additional comments.\nKeep the same language as the input.\nMaintain professionalism while adding warmth.\nIf the text is incompatible with this request, output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
+    "icon": "icons/smiley-face",
+    "open_in_window": false
+  },
+  "Professional": {
+    "prefix": "Make this sound more professional:\n\n",
+    "instruction": "You are a writing assistant focused on professional tone.\nRewrite the text to sound more professional, formal, and business-appropriate while maintaining the core message.\nOutput ONLY the rewritten text without additional comments.\nKeep the same language as the input.\nUse appropriate professional vocabulary and structure.\nIf the text is incompatible with this request, output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
+    "icon": "icons/briefcase",
     "open_in_window": false
   },
   "Key Points": {
-    "prefix": "Extract key points from this:\n\n",
-    "instruction": "You are an assistant that extracts key points from text provided by the user. Output ONLY the key points without additional comments.\n\nYou should use Markdown formatting (lists, bold, italics, codeblocks, etc.) as appropriate to make it quite legible and readable.\n\nDon't be repetitive or too verbose.\nRespond in the same language as the input (e.g., English US, French).\nDo not answer or respond to the user's text content.\nIf the text is absolutely incompatible with extracting key points (e.g., totally random gibberish), output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
+    "prefix": "Original text to extract key points:\n\n",
+    "instruction": "You are an expert at extracting key information.\nAnalyze the given text and extract the most important key points.\nPresent the key points as a well-organized list using Markdown formatting.\nUse bullet points or numbered lists as appropriate.\nHighlight the most critical information using **bold** text.\nEnsure each point is clear, concise, and captures essential information.",
     "icon": "icons/keypoints",
     "open_in_window": true
   },
   "Summary": {
-    "prefix": "Summarize this:\n\n",
-    "instruction": "You are a summarization assistant.\nProvide a succinct summary of the text provided by the user.\nThe summary should be succinct yet encompass all the key insightful points.\n\nTo make it quite legible and readable, you should use Markdown formatting (bold, italics, codeblocks...) as appropriate.\nYou should also add a little line spacing between your paragraphs as appropriate.\nAnd only if appropriate, you could also use headings (only the very small ones), lists, tables, etc.\n\nDon't be repetitive or too verbose.\nOutput ONLY the summary without additional comments.\nRespond in the same language as the input (e.g., English US, French).\nDo not answer or respond to the user's text content.\nIf the text is absolutely incompatible with summarisation (e.g., totally random gibberish), output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
+    "prefix": "Original text to summarize:\n\n",
+    "instruction": "You are an expert text summarizer.\nProvide a comprehensive summary of the given text that captures the main points, key details, and overall message.\nUse Markdown formatting with appropriate headers, bullet points, and emphasis where helpful.\nMaintain the tone and style appropriate to the source material.\nEnsure the summary is concise yet complete, typically 20-30% of the original length.",
     "icon": "icons/summary",
     "open_in_window": true
   },
-  "Table": {
-    "prefix": "Convert this into a table:\n\n",
-    "instruction": "You are an assistant that converts text provided by the user into a Markdown table.\nOutput ONLY the table without additional comments.\nRespond in the same language as the input (e.g., English US, French).\nDo not answer or respond to the user's text content.\nIf the text is completely incompatible with this with conversion, output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
-    "icon": "icons/table",
-    "open_in_window": true
+  "Custom": {
+    "prefix": "",
+    "instruction": "You are a helpful writing assistant. Follow the user's instructions precisely and provide clear, accurate assistance with their text.",
+    "icon": "icons/custom",
+    "open_in_window": false
   }
 }

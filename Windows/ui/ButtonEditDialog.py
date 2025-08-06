@@ -160,22 +160,6 @@ class ButtonEditDialog(QDialog):
         layout.addWidget(prefix_label)
         layout.addWidget(self.prefix_input)
 
-        # Icon
-        icon_label = QLabel("Icon (without .png/.svg, e.g., 'icons/magnifying-glass'):")
-        icon_label.setStyleSheet(f"color: {'#fff' if colorMode == 'dark' else '#333'}; font-weight: bold;")
-        self.icon_input = QLineEdit()
-        self.icon_input.setStyleSheet(f"""
-            QLineEdit {{
-                padding: 8px;
-                border: 1px solid {"#777" if colorMode == "dark" else "#ccc"};
-                border-radius: 8px;
-                background-color: {"#333" if colorMode == "dark" else "white"};
-                color: {"#fff" if colorMode == "dark" else "#000"};
-            }}
-        """)
-        self.icon_input.setText(self.button_data.get("icon", ""))
-        layout.addWidget(icon_label)
-        layout.addWidget(self.icon_input)
 
         # Open in window
         window_label = QLabel("Display Mode:")
@@ -237,6 +221,5 @@ class ButtonEditDialog(QDialog):
             "name": self.name_input.text().strip(),
             "prefix": self.prefix_input.text(),
             "instruction": self.instruction_input.toPlainText(),
-            "icon": self.icon_input.text().strip(),
             "open_in_window": self.window_radio.isChecked(),
         }
