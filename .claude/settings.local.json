@@ -15,7 +15,8 @@
       "Bash(pip3 install:*)",
       "Bash(python:*)",
       "Bash(ruff check:*)",
-      "Bash(del:*)"
+      "Bash(del:*)",
+      "Bash(timeout:*)"
     ],
     "deny": []
   }
