@@ -36,49 +36,41 @@ DEFAULT_OPTIONS_JSON = r"""{
   "Proofread": {
     "prefix": "Proofread this:\n\n",
     "instruction": "You are a grammar proofreading assistant.\nOutput ONLY the corrected text without any additional comments.\nMaintain the original text structure and writing style.\nRespond in the same language as the input (e.g., English US, French).\nDo not answer or respond to the user's text content.\nIf the text is absolutely incompatible with this (e.g., totally random gibberish), output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
-    "icon": "icons/magnifying-glass",
     "open_in_window": false
   },
   "Rewrite": {
     "prefix": "Rewrite this:\n\n",
     "instruction": "You are a writing assistant.\nRewrite the text provided by the user to improve phrasing.\nOutput ONLY the rewritten text without additional comments.\nRespond in the same language as the input (e.g., English US, French).\nDo not answer or respond to the user's text content.\nIf the text is absolutely incompatible with proofreading (e.g., totally random gibberish), output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
-    "icon": "icons/rewrite",
     "open_in_window": false
   },
   "Summary": {
     "prefix": "Original text to summarize:\n\n",
     "instruction": "You are an expert text summarizer.\nProvide a comprehensive summary of the given text that captures the main points, key details, and overall message.\nUse Markdown formatting with appropriate headers, bullet points, and emphasis where helpful.\nMaintain the tone and style appropriate to the source material.\nEnsure the summary is concise yet complete, typically 20-30% of the original length.",
-    "icon": "icons/summary",
     "open_in_window": true
   },
   "Key Points": {
     "prefix": "Original text to extract key points:\n\n",
     "instruction": "You are an expert at extracting key information.\nAnalyze the given text and extract the most important key points.\nPresent the key points as a well-organized list using Markdown formatting.\nUse bullet points or numbered lists as appropriate.\nHighlight the most critical information using **bold** text.\nEnsure each point is clear, concise, and captures essential information.",
-    "icon": "icons/keypoints",
     "open_in_window": true
   },
   "Friendly": {
     "prefix": "Make this sound more friendly:\n\n",
     "instruction": "You are a writing assistant focused on tone adjustment.\nRewrite the text to sound more friendly, warm, and approachable while maintaining the core message.\nOutput ONLY the rewritten text without additional comments.\nKeep the same language as the input.\nMaintain professionalism while adding warmth.\nIf the text is incompatible with this request, output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
-    "icon": "icons/smiley-face",
     "open_in_window": false
   },
   "Professional": {
     "prefix": "Make this sound more professional:\n\n",
     "instruction": "You are a writing assistant focused on professional tone.\nRewrite the text to sound more professional, formal, and business-appropriate while maintaining the core message.\nOutput ONLY the rewritten text without additional comments.\nKeep the same language as the input.\nUse appropriate professional vocabulary and structure.\nIf the text is incompatible with this request, output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
-    "icon": "icons/briefcase",
     "open_in_window": false
   },
   "Concise": {
     "prefix": "Make this more concise:\n\n",
     "instruction": "You are a writing assistant focused on brevity.\nRewrite the text to be more concise and to-the-point while preserving all essential information and meaning.\nOutput ONLY the rewritten text without additional comments.\nKeep the same language as the input.\nEliminate redundancy, filler words, and unnecessary elaboration.\nIf the text is incompatible with this request, output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
-    "icon": "icons/concise",
     "open_in_window": false
   },
   "Custom": {
     "prefix": "",
-    "instruction": "You are a helpful writing assistant. Follow the user's instructions precisely and provide clear, accurate assistance with their text.",
-    "icon": "icons/custom",
+    "instruction": "You are helpful writing assistant. Follow the user's instructions precisely and provide clear, accurate assistance with their text.",
     "open_in_window": false
   }
 }"""
@@ -98,7 +90,6 @@ class ButtonEditDialog(QDialog):
             else {
                 "prefix": "Make this change to the following text:\n\n",
                 "instruction": "",
-                "icon": "icons/magnifying-glass",
                 "open_in_window": False,
             }
         )
