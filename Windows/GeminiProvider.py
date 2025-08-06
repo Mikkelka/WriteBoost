@@ -9,6 +9,8 @@ for Google's Gemini API using the new genai.Client approach.
 from datetime import datetime
 import logging
 import webbrowser
+import time
+import random
 
 # External libraries
 from google import genai
@@ -75,6 +77,27 @@ class GeminiProvider(AIProvider):
             lambda: webbrowser.open("https://aistudio.google.com/app/apikey"),
         )
 
+    def _exponential_backoff_retry(self, func, max_retries=3):
+        """
+        Execute a function with exponential backoff retry for rate limiting.
+        """
+        for attempt in range(max_retries):
+            try:
+                return func()
+            except Exception as e:
+                error_str = str(e).lower()
+                
+                # Check if it's a rate limiting error
+                if ("rate" in error_str or "quota" in error_str or "limit" in error_str) and attempt < max_retries - 1:
+                    # Exponential backoff: 1s, 2s, 4s + random jitter
+                    delay = (2 ** attempt) + random.uniform(0, 1)
+                    logging.warning(f"Rate limit detected, retrying in {delay:.1f}s (attempt {attempt + 1}/{max_retries})")
+                    time.sleep(delay)
+                    continue
+                
+                # Re-raise for non-rate-limit errors or final attempt
+                raise e
+
     def get_response(
         self,
         system_instruction: str,
@@ -131,13 +154,15 @@ class GeminiProvider(AIProvider):
             # Combine system instruction and prompt
             full_prompt = f"{enhanced_system_instruction}\n\n{prompt}"
 
-            # Generate content using the new genai.Client approach
-            response = self.client.models.generate_content(
-                model=use_model,
-                contents=full_prompt,
-                config=types.GenerateContentConfig(thinking_config=types.ThinkingConfig(thinking_budget=use_thinking)),
-            )
-
+            # Generate content using the new genai.Client approach with exponential backoff
+            def make_api_call():
+                return self.client.models.generate_content(
+                    model=use_model,
+                    contents=full_prompt,
+                    config=types.GenerateContentConfig(thinking_config=types.ThinkingConfig(thinking_budget=use_thinking)),
+                )
+            
+            response = self._exponential_backoff_retry(make_api_call)
             response_text = response.text.rstrip("\n")
             logging.debug("API call completed successfully")
 
@@ -151,23 +176,25 @@ class GeminiProvider(AIProvider):
             # Handle various error types
             logging.error(f"Gemini API exception: {type(e).__name__}: {str(e)}")
 
-            error_str = str(e)
-            if "timeout" in error_str.lower() or "time out" in error_str.lower():
+            error_str = str(e).lower()
+            if "timeout" in error_str or "time out" in error_str:
                 error_msg = "Request timed out. Please try again."
-            elif "safety" in error_str.lower() or "blocked" in error_str.lower():
+            elif "safety" in error_str or "blocked" in error_str:
                 error_msg = "Content was blocked by safety filters. Try rephrasing your request."
-            elif "not found" in error_str.lower() or "invalid" in error_str.lower():
-                error_msg = f"Model error: {error_str}"
+            elif "rate" in error_str or "quota" in error_str or "limit" in error_str:
+                error_msg = "Rate limit reached. The app tried multiple times but couldn't get through. Please wait a moment and try again."
+            elif "not found" in error_str or "invalid" in error_str:
+                error_msg = f"Model error: {str(e)}"
             elif (
-                "authentication" in error_str.lower()
-                or "api key" in error_str.lower()
-                or "unauthorized" in error_str.lower()
+                "authentication" in error_str
+                or "api key" in error_str
+                or "unauthorized" in error_str
             ):
                 error_msg = "Authentication failed. Please check your API key in settings."
-            elif "service unavailable" in error_str.lower() or "server error" in error_str.lower():
+            elif "service unavailable" in error_str or "server error" in error_str:
                 error_msg = "Gemini service temporarily unavailable. Please try again in a moment."
             else:
-                error_msg = f"Gemini API Error: {error_str}"
+                error_msg = f"Gemini API Error: {str(e)}"
 
             logging.error(f"Processed error message: {error_msg}")
             # For errors, show message via signal

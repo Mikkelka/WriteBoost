@@ -108,10 +108,10 @@ class HotkeyManager(QObject):
         # First attempt with default sleep
         selected_text = self.app.text_operations_manager.get_selected_text()
 
-        # Retry with longer sleep if no text captured
+        # Retry with more attempts if no text captured
         if not selected_text:
-            logging.debug("No text captured, retrying with longer sleep")
-            selected_text = self.app.text_operations_manager.get_selected_text(sleep_duration=0.5)
+            logging.debug("No text captured, retrying with more attempts")
+            selected_text = self.app.text_operations_manager.get_selected_text(max_retries=3)
 
         logging.debug(f'Selected text: "{selected_text}"')
         try:

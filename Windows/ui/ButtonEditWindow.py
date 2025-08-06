@@ -172,7 +172,11 @@ class ButtonEditWindow(QtWidgets.QWidget):
         for k, v in data.items():
             if k == "Custom":
                 continue
-            b = DraggableButton(self, k, k)
+            
+            # Check if this operation opens in a chat window
+            is_chat_operation = v.get("open_in_window", False)
+            
+            b = DraggableButton(self, k, k, is_chat_operation=is_chat_operation)
             icon_path = get_resource_path(v["icon"] + ("_dark" if colorMode == "dark" else "_light") + ".png")
             if os.path.exists(icon_path):
                 b.setIcon(QtGui.QIcon(icon_path))

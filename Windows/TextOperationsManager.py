@@ -22,42 +22,53 @@ class TextOperationsManager(QtCore.QObject):
         # Connect signals
         self.show_message_signal.connect(self.show_message_box)
 
-    def get_selected_text(self, sleep_duration=0.2):
+    def get_selected_text(self, max_retries=2):
         """
-        Get the currently selected text from any application.
+        Get the currently selected text from any application with optimized timing.
         Args:
-            sleep_duration (float): Time to wait for clipboard update
+            max_retries (int): Maximum number of attempts to capture text
         """
-        # Backup the clipboard
         clipboard_backup = pyperclip.paste()
-        logging.debug(f'Clipboard backup: "{clipboard_backup}" (sleep: {sleep_duration}s)')
+        
+        for attempt in range(max_retries):
+            logging.debug(f"Text capture attempt {attempt + 1}/{max_retries}")
+            
+            # Clear the clipboard
+            self.clear_clipboard()
 
-        # Clear the clipboard
-        self.clear_clipboard()
+            # Simulate Ctrl+C
+            logging.debug("Simulating Ctrl+C")
+            kbrd = pykeyboard.Controller()
 
-        # Simulate Ctrl+C
-        logging.debug("Simulating Ctrl+C")
-        kbrd = pykeyboard.Controller()
+            def press_ctrl_c():
+                kbrd.press(pykeyboard.Key.ctrl.value)
+                kbrd.press("c")
+                kbrd.release("c")
+                kbrd.release(pykeyboard.Key.ctrl.value)
 
-        def press_ctrl_c():
-            kbrd.press(pykeyboard.Key.ctrl.value)
-            kbrd.press("c")
-            kbrd.release("c")
-            kbrd.release(pykeyboard.Key.ctrl.value)
+            press_ctrl_c()
 
-        press_ctrl_c()
+            # Progressive delay: 0.1s first attempt, then 0.3s
+            delay = 0.1 if attempt == 0 else 0.3
+            time.sleep(delay)
+            logging.debug(f"Waited {delay}s for clipboard")
 
-        # Wait for the clipboard to update
-        time.sleep(sleep_duration)
-        logging.debug(f"Waited {sleep_duration}s for clipboard")
+            # Get the selected text
+            selected_text = pyperclip.paste()
+            
+            # Check if we got new text (different from backup)
+            if selected_text != clipboard_backup:
+                # Restore the clipboard and return success
+                pyperclip.copy(clipboard_backup)
+                return selected_text
+                
+            # If last attempt failed, break to avoid unnecessary waiting
+            if attempt == max_retries - 1:
+                logging.warning("Failed to capture selected text after all attempts")
 
-        # Get the selected text
-        selected_text = pyperclip.paste()
-
-        # Restore the clipboard
+        # Restore the clipboard before returning empty result
         pyperclip.copy(clipboard_backup)
-
-        return selected_text
+        return ""
 
     @staticmethod
     def clear_clipboard():

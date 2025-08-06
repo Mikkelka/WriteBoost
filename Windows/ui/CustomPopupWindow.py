@@ -38,10 +38,11 @@ def get_resource_path(relative_path):
 
 
 class SimpleButton(QtWidgets.QPushButton):
-    def __init__(self, parent_popup, key, text):
+    def __init__(self, parent_popup, key, text, is_chat_operation=False):
         super().__init__(text, parent_popup)
         self.popup = parent_popup
         self.key = key
+        self.is_chat_operation = is_chat_operation
 
         # Enable hover events and styled background
         self.setAttribute(QtCore.Qt.WA_Hover, True)
@@ -53,11 +54,23 @@ class SimpleButton(QtWidgets.QPushButton):
         # Set fixed size (adjust as needed)
         self.setFixedSize(120, 40)
 
+        # Different styling for chat operations vs direct replacement
+        if is_chat_operation:
+            # Blue-tinted styling for chat operations
+            bg_color = "#2e4057" if colorMode == "dark" else "#e3f2fd"
+            border_color = "#3f5c7a" if colorMode == "dark" else "#90caf9"
+            hover_color = "#3f5c7a" if colorMode == "dark" else "#bbdefb"
+        else:
+            # Default gray styling for direct replacement
+            bg_color = "#444" if colorMode == "dark" else "white"
+            border_color = "#666" if colorMode == "dark" else "#ccc"
+            hover_color = "#555" if colorMode == "dark" else "#f0f0f0"
+
         # Define base style using the dynamic property instead of the :hover pseudo-class
         self.base_style = f"""
             QPushButton {{
-                background-color: {"#444" if colorMode == "dark" else "white"};
-                border: 1px solid {"#666" if colorMode == "dark" else "#ccc"};
+                background-color: {bg_color};
+                border: 1px solid {border_color};
                 border-radius: 8px;
                 padding: 10px;
                 font-size: 14px;
@@ -65,11 +78,11 @@ class SimpleButton(QtWidgets.QPushButton):
                 color: {"#fff" if colorMode == "dark" else "#000"};
             }}
             QPushButton[hover="true"] {{
-                background-color: {"#555" if colorMode == "dark" else "#f0f0f0"};
+                background-color: {hover_color};
             }}
         """
         self.setStyleSheet(self.base_style)
-        logging.debug("SimpleButton initialized")
+        logging.debug(f"SimpleButton initialized - is_chat: {is_chat_operation}")
 
     def enterEvent(self, event):
         self.setProperty("hover", True)
@@ -91,7 +104,6 @@ class CustomPopupWindow(QtWidgets.QWidget):
         self.selected_text = selected_text
         self.has_text = bool(selected_text.strip())
 
-        self.close_button = None
         self.custom_input = None
         self.input_area = None
 
@@ -114,7 +126,7 @@ class CustomPopupWindow(QtWidgets.QWidget):
 
         content_layout = QtWidgets.QVBoxLayout(self.background)
         # Margin Control
-        content_layout.setContentsMargins(10, 4, 10, 10)
+        content_layout.setContentsMargins(10, 10, 10, 10)
         content_layout.setSpacing(10)
 
         # TOP BAR LAYOUT & STYLE
@@ -122,28 +134,6 @@ class CustomPopupWindow(QtWidgets.QWidget):
         top_bar.setContentsMargins(0, 0, 0, 0)
         top_bar.setSpacing(0)
 
-        # Add spacer to push close button to the right
-        top_bar.addStretch(1)
-
-        # Close button
-        self.close_button = QPushButton("×")
-        self.close_button.setFixedSize(24, 24)
-        self.close_button.setStyleSheet(f"""
-            QPushButton {{
-                background-color: transparent;
-                color: {"#fff" if colorMode == "dark" else "#333"};
-                font-size: 20px;
-                font-weight: bold;
-                border: none;
-                border-radius: 6px;
-                padding: 0px;
-            }}
-            QPushButton:hover {{
-                background-color: {"#333" if colorMode == "dark" else "#ebebeb"};
-            }}
-        """)
-        self.close_button.clicked.connect(self.close)
-        top_bar.addWidget(self.close_button, 0, Qt.AlignRight)
         content_layout.addLayout(top_bar)
 
         # Input area (hidden in edit mode)
@@ -237,7 +227,11 @@ class CustomPopupWindow(QtWidgets.QWidget):
         for k, v in data.items():
             if k == "Custom":
                 continue
-            b = SimpleButton(self, k, k)
+            
+            # Check if this operation opens in a chat window
+            is_chat_operation = v.get("open_in_window", False)
+            
+            b = SimpleButton(self, k, k, is_chat_operation=is_chat_operation)
             icon_path = get_resource_path(v["icon"] + ("_dark" if colorMode == "dark" else "_light") + ".png")
             if os.path.exists(icon_path):
                 b.setIcon(QtGui.QIcon(icon_path))

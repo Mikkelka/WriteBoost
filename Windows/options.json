@@ -35,11 +35,11 @@
     "icon": "icons/concise",
     "open_in_window": false
   },
-  "Table": {
-    "prefix": "Convert this into a table:\n\n",
-    "instruction": "You are an assistant that converts text provided by the user into a Markdown table.\nOutput ONLY the table without additional comments.\nRespond in the same language as the input (e.g., English US, French).\nDo not answer or respond to the user's text content.\nIf the text is completely incompatible with this with conversion, output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
-    "icon": "icons/table",
-    "open_in_window": true
+  "Overs\u00e6t til Dansk": {
+    "prefix": "",
+    "instruction": "Overs\u00e6t til teksten til dansk og output kun den overs\u00e6ttede tekst",
+    "icon": "icons/magnifying-glass",
+    "open_in_window": false
   },
   "Key Points": {
     "prefix": "Extract key points from this:\n\n",
@@ -53,10 +53,10 @@
     "icon": "icons/summary",
     "open_in_window": true
   },
-  "Overs\u00e6t til Dansk": {
-    "prefix": "",
-    "instruction": "Overs\u00e6t til teksten til dansk og output kun den overs\u00e6ttede tekst",
-    "icon": "icons/magnifying-glass",
-    "open_in_window": false
+  "Table": {
+    "prefix": "Convert this into a table:\n\n",
+    "instruction": "You are an assistant that converts text provided by the user into a Markdown table.\nOutput ONLY the table without additional comments.\nRespond in the same language as the input (e.g., English US, French).\nDo not answer or respond to the user's text content.\nIf the text is completely incompatible with this with conversion, output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
+    "icon": "icons/table",
+    "open_in_window": true
   }
 }

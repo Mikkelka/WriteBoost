@@ -7,10 +7,11 @@ from ui.UIUtils import colorMode
 
 
 class DraggableButton(QtWidgets.QPushButton):
-    def __init__(self, parent_window, key, text):
+    def __init__(self, parent_window, key, text, is_chat_operation=False):
         super().__init__(text, parent_window)
         self.window = parent_window
         self.key = key
+        self.is_chat_operation = is_chat_operation
         self.drag_start_position = None
         self.setAcceptDrops(True)
         self.icon_container = None
@@ -26,11 +27,23 @@ class DraggableButton(QtWidgets.QPushButton):
         # Set fixed size (adjust as needed)
         self.setFixedSize(120, 40)
 
+        # Different styling for chat operations vs direct replacement
+        if is_chat_operation:
+            # Blue-tinted styling for chat operations
+            bg_color = "#2e4057" if colorMode == "dark" else "#e3f2fd"
+            border_color = "#3f5c7a" if colorMode == "dark" else "#90caf9"
+            hover_color = "#3f5c7a" if colorMode == "dark" else "#bbdefb"
+        else:
+            # Default gray styling for direct replacement
+            bg_color = "#444" if colorMode == "dark" else "white"
+            border_color = "#666" if colorMode == "dark" else "#ccc"
+            hover_color = "#555" if colorMode == "dark" else "#f0f0f0"
+
         # Define base style using the dynamic property instead of the :hover pseudo-class
         self.base_style = f"""
             QPushButton {{
-                background-color: {"#444" if colorMode == "dark" else "white"};
-                border: 1px solid {"#666" if colorMode == "dark" else "#ccc"};
+                background-color: {bg_color};
+                border: 1px solid {border_color};
                 border-radius: 8px;
                 padding: 10px;
                 font-size: 14px;
@@ -38,11 +51,11 @@ class DraggableButton(QtWidgets.QPushButton):
                 color: {"#fff" if colorMode == "dark" else "#000"};
             }}
             QPushButton[hover="true"] {{
-                background-color: {"#555" if colorMode == "dark" else "#f0f0f0"};
+                background-color: {hover_color};
             }}
         """
         self.setStyleSheet(self.base_style)
-        logging.debug("DraggableButton initialized")
+        logging.debug(f"DraggableButton initialized - is_chat: {is_chat_operation}")
 
     def enterEvent(self, event):
         self.setProperty("hover", True)
