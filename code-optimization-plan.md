@@ -164,9 +164,9 @@ background.png
 - [x] Load from options.json instead
 - [x] Update reset functionality
 
-### Phase 5: Dead Code Removal (~15 lines saved)
-- [ ] Remove background image references
-- [ ] Clean up unused image loading code
+### Phase 5: Dead Code Removal (~15 lines saved) ✅ COMPLETED
+- [x] Remove background image references
+- [x] Clean up unused image loading code
 
 ---
 

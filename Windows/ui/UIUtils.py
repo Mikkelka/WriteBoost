@@ -2,7 +2,6 @@ import os
 import sys
 
 from PySide6 import QtCore, QtGui, QtWidgets
-from PySide6.QtGui import QImage, QPixmap
 
 colorMode = "dark"  # Always dark mode
 
@@ -31,20 +30,6 @@ class UIUtils:
             else:
                 child.widget().deleteLater()
 
-    @classmethod
-    def resize_and_round_image(cls, image, image_size=100, rounding_amount=50):
-        image = image.scaledToWidth(image_size)
-        clipPath = QtGui.QPainterPath()
-        clipPath.addRoundedRect(0, 0, image_size, image_size, rounding_amount, rounding_amount)
-        target = QImage(image_size, image_size, QImage.Format_ARGB32)
-        target.fill(QtCore.Qt.GlobalColor.transparent)
-        painter = QtGui.QPainter(target)
-        painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
-        painter.setClipPath(clipPath)
-        painter.drawImage(0, 0, image)
-        painter.end()
-        targetPixmap = QPixmap.fromImage(target)
-        return targetPixmap
 
     @classmethod
     def setup_window_and_layout(cls, base: QtWidgets.QWidget):
