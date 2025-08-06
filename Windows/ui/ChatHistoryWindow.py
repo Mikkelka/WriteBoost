@@ -8,7 +8,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QMessageBox
 
 from ui.ChatManager import ChatManager
-from ui.UIUtils import UIUtils, colorMode, get_resource_path
+from ui.UIUtils import UIUtils, colorMode, get_resource_path, get_label_style, get_button_style
 
 _ = lambda x: x
 
@@ -65,7 +65,7 @@ class ChatListItem(QtWidgets.QWidget):
 
         # Open button
         open_btn = QtWidgets.QPushButton("Open")
-        open_btn.setStyleSheet(self.get_button_style())
+        open_btn.setStyleSheet(get_button_style("green"))
         open_btn.clicked.connect(lambda: self.open_requested.emit(self.chat_data["id"]))
         button_layout.addWidget(open_btn)
 
@@ -78,7 +78,7 @@ class ChatListItem(QtWidgets.QWidget):
                 )
             )
         )
-        delete_btn.setStyleSheet(self.get_delete_button_style())
+        delete_btn.setStyleSheet(get_button_style("red"))
         delete_btn.setToolTip("Delete Chat")
         delete_btn.setFixedSize(30, 30)
         delete_btn.clicked.connect(lambda: self.delete_requested.emit(self.chat_data["id"]))
@@ -99,33 +99,7 @@ class ChatListItem(QtWidgets.QWidget):
             }}
         """)
 
-    def get_button_style(self):
-        return f"""
-            QPushButton {{
-                background-color: {"#2e7d32" if colorMode == "dark" else "#4CAF50"};
-                color: white;
-                border: none;
-                border-radius: 5px;
-                padding: 8px 16px;
-                font-size: 14px;
-            }}
-            QPushButton:hover {{
-                background-color: {"#1b5e20" if colorMode == "dark" else "#45a049"};
-            }}
-        """
 
-    def get_delete_button_style(self):
-        return f"""
-            QPushButton {{
-                background-color: {"#d32f2f" if colorMode == "dark" else "#f44336"};
-                border: none;
-                border-radius: 5px;
-                padding: 5px;
-            }}
-            QPushButton:hover {{
-                background-color: {"#b71c1c" if colorMode == "dark" else "#d32f2f"};
-            }}
-        """
 
 
 class ChatHistoryWindow(QtWidgets.QWidget):
@@ -215,29 +189,10 @@ class ChatHistoryWindow(QtWidgets.QWidget):
         # Empty state label
         self.empty_label = QtWidgets.QLabel("No saved chats yet.\nStart a conversation and save it to see it here.")
         self.empty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.empty_label.setStyleSheet(f"""
-            QLabel {{
-                color: {"#aaaaaa" if colorMode == "dark" else "#666666"};
-                font-size: 16px;
-                padding: 50px;
-            }}
-        """)
+        self.empty_label.setStyleSheet(get_label_style(color_type="muted", font_size=16) + " padding: 50px;")
         self.empty_label.hide()
         content_layout.addWidget(self.empty_label)
 
-    def get_button_style(self):
-        return f"""
-            QPushButton {{
-                background-color: {"#444" if colorMode == "dark" else "#f0f0f0"};
-                color: {"#ffffff" if colorMode == "dark" else "#000000"};
-                border: 1px solid {"#666" if colorMode == "dark" else "#ccc"};
-                border-radius: 5px;
-                padding: 8px;
-            }}
-            QPushButton:hover {{
-                background-color: {"#555" if colorMode == "dark" else "#e0e0e0"};
-            }}
-        """
 
     def load_chats(self):
         """Load and display all saved chats"""

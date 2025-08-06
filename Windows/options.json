@@ -39,6 +39,11 @@
     "instruction": "You are an expert text summarizer.\nProvide a comprehensive summary of the given text that captures the main points, key details, and overall message.\nUse Markdown formatting with appropriate headers, bullet points, and emphasis where helpful.\nMaintain the tone and style appropriate to the source material.\nEnsure the summary is concise yet complete, typically 20-30% of the original length.",
     "open_in_window": true
   },
+  "gsdgsdg": {
+    "prefix": "Make this change to the following text:\n\n",
+    "instruction": "sdggds",
+    "open_in_window": false
+  },
   "Custom": {
     "prefix": "",
     "instruction": "You are a helpful writing assistant. Follow the user's instructions precisely and provide clear, accurate assistance with their text.",

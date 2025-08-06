@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from ui.UIUtils import ThemeBackground, colorMode, get_resource_path
+from ui.UIUtils import ThemeBackground, colorMode, get_resource_path, get_title_style, get_label_style, get_button_style
 from ui.ButtonEditDialog import ButtonEditDialog
 from ui.DraggableButton import DraggableButton
 
@@ -48,22 +48,13 @@ class ButtonEditWindow(QtWidgets.QWidget):
 
         # Title
         title_label = QLabel("Edit Writing Tools Buttons")
-        title_label.setStyleSheet(f"""
-            color: {"#fff" if colorMode == "dark" else "#333"};
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        """)
+        title_label.setStyleSheet(get_title_style())
         title_label.setAlignment(Qt.AlignCenter)
         content_layout.addWidget(title_label)
 
         # Instructions
         instruction_label = QLabel("Drag to rearrange • Click edit/delete icons to modify buttons")
-        instruction_label.setStyleSheet(f"""
-            color: {"#aaa" if colorMode == "dark" else "#666"};
-            font-size: 12px;
-            margin-bottom: 15px;
-        """)
+        instruction_label.setStyleSheet(get_label_style(color_type="muted", font_size=12) + " margin-bottom: 15px;")
         instruction_label.setAlignment(Qt.AlignCenter)
         content_layout.addWidget(instruction_label)
 
@@ -76,39 +67,13 @@ class ButtonEditWindow(QtWidgets.QWidget):
         
         # Add New button
         add_btn = QPushButton("+ Add New")
-        add_btn.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {"#2e7d32" if colorMode == "dark" else "#4CAF50"};
-                color: white;
-                border: none;
-                border-radius: 8px;
-                padding: 10px 20px;
-                font-size: 14px;
-                font-weight: bold;
-            }}
-            QPushButton:hover {{
-                background-color: {"#1b5e20" if colorMode == "dark" else "#45a049"};
-            }}
-        """)
+        add_btn.setStyleSheet(get_button_style("green"))
         add_btn.clicked.connect(self.add_new_button_clicked)
         button_layout.addWidget(add_btn)
 
         # Reset button
         reset_btn = QPushButton("Reset to Defaults")
-        reset_btn.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {"#d32f2f" if colorMode == "dark" else "#f44336"};
-                color: white;
-                border: none;
-                border-radius: 8px;
-                padding: 10px 20px;
-                font-size: 14px;
-                font-weight: bold;
-            }}
-            QPushButton:hover {{
-                background-color: {"#b71c1c" if colorMode == "dark" else "#d32f2f"};
-            }}
-        """)
+        reset_btn.setStyleSheet(get_button_style("red"))
         reset_btn.clicked.connect(self.on_reset_clicked)
         button_layout.addWidget(reset_btn)
 
@@ -116,20 +81,7 @@ class ButtonEditWindow(QtWidgets.QWidget):
 
         # Close button
         close_btn = QPushButton("Close")
-        close_btn.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {"#444" if colorMode == "dark" else "#f0f0f0"};
-                color: {"#fff" if colorMode == "dark" else "#000"};
-                border: 1px solid {"#666" if colorMode == "dark" else "#ccc"};
-                border-radius: 8px;
-                padding: 10px 20px;
-                font-size: 14px;
-                margin-top: 10px;
-            }}
-            QPushButton:hover {{
-                background-color: {"#555" if colorMode == "dark" else "#e0e0e0"};
-            }}
-        """)
+        close_btn.setStyleSheet(get_button_style() + " margin-top: 10px;")
         close_btn.clicked.connect(self.close)
         content_layout.addWidget(close_btn)
 

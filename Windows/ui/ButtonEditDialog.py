@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from ui.UIUtils import colorMode, get_resource_path
+from ui.UIUtils import colorMode, get_resource_path, get_label_style, get_input_style, get_button_style, get_dialog_style
 
 _ = lambda x: x
 
@@ -48,17 +48,9 @@ class ButtonEditDialog(QDialog):
 
         # Name
         name_label = QLabel("Button Name:")
-        name_label.setStyleSheet(f"color: {'#fff' if colorMode == 'dark' else '#333'}; font-weight: bold;")
+        name_label.setStyleSheet(get_label_style(bold=True))
         self.name_input = QLineEdit()
-        self.name_input.setStyleSheet(f"""
-            QLineEdit {{
-                padding: 8px;
-                border: 1px solid {"#777" if colorMode == "dark" else "#ccc"};
-                border-radius: 8px;
-                background-color: {"#333" if colorMode == "dark" else "white"};
-                color: {"#fff" if colorMode == "dark" else "#000"};
-            }}
-        """)
+        self.name_input.setStyleSheet(f"QLineEdit {{ {get_input_style()} }}")
         if "name" in self.button_data:
             self.name_input.setText(self.button_data["name"])
         layout.addWidget(name_label)
@@ -66,34 +58,18 @@ class ButtonEditDialog(QDialog):
 
         # Instruction (changed to a multiline QPlainTextEdit)
         instruction_label = QLabel("What should your AI do with your selected text? (System Instruction)")
-        instruction_label.setStyleSheet(f"color: {'#fff' if colorMode == 'dark' else '#333'}; font-weight: bold;")
+        instruction_label.setStyleSheet(get_label_style(bold=True))
         self.instruction_input = QPlainTextEdit()
-        self.instruction_input.setStyleSheet(f"""
-            QPlainTextEdit {{
-                padding: 8px;
-                border: 1px solid {"#777" if colorMode == "dark" else "#ccc"};
-                border-radius: 8px;
-                background-color: {"#333" if colorMode == "dark" else "white"};
-                color: {"#fff" if colorMode == "dark" else "#000"};
-            }}
-        """)
+        self.instruction_input.setStyleSheet(f"QPlainTextEdit {{ {get_input_style()} }}")
         self.instruction_input.setPlainText(self.button_data.get("instruction", ""))
         layout.addWidget(instruction_label)
         layout.addWidget(self.instruction_input)
 
         # Prefix
         prefix_label = QLabel("Prefix (text added before your selected text):")
-        prefix_label.setStyleSheet(f"color: {'#fff' if colorMode == 'dark' else '#333'}; font-weight: bold;")
+        prefix_label.setStyleSheet(get_label_style(bold=True))
         self.prefix_input = QLineEdit()
-        self.prefix_input.setStyleSheet(f"""
-            QLineEdit {{
-                padding: 8px;
-                border: 1px solid {"#777" if colorMode == "dark" else "#ccc"};
-                border-radius: 8px;
-                background-color: {"#333" if colorMode == "dark" else "white"};
-                color: {"#fff" if colorMode == "dark" else "#000"};
-            }}
-        """)
+        self.prefix_input.setStyleSheet(f"QLineEdit {{ {get_input_style()} }}")
         self.prefix_input.setText(self.button_data.get("prefix", ""))
         layout.addWidget(prefix_label)
         layout.addWidget(self.prefix_input)
@@ -101,13 +77,13 @@ class ButtonEditDialog(QDialog):
 
         # Open in window
         window_label = QLabel("Display Mode:")
-        window_label.setStyleSheet(f"color: {'#fff' if colorMode == 'dark' else '#333'}; font-weight: bold;")
+        window_label.setStyleSheet(get_label_style(bold=True))
         layout.addWidget(window_label)
 
         self.replace_radio = QRadioButton("Replace selected text directly")
         self.window_radio = QRadioButton("Open result in a new window")
-        self.replace_radio.setStyleSheet(f"color: {'#fff' if colorMode == 'dark' else '#333'};")
-        self.window_radio.setStyleSheet(f"color: {'#fff' if colorMode == 'dark' else '#333'};")
+        self.replace_radio.setStyleSheet(get_label_style())
+        self.window_radio.setStyleSheet(get_label_style())
 
         # Set default selection
         if self.button_data.get("open_in_window", False):
@@ -124,18 +100,7 @@ class ButtonEditDialog(QDialog):
         self.cancel_button = QPushButton("Cancel")
 
         # Style buttons
-        button_style = f"""
-            QPushButton {{
-                padding: 8px 16px;
-                border: 1px solid {"#777" if colorMode == "dark" else "#ccc"};
-                border-radius: 8px;
-                background-color: {"#444" if colorMode == "dark" else "white"};
-                color: {"#fff" if colorMode == "dark" else "#000"};
-            }}
-            QPushButton:hover {{
-                background-color: {"#555" if colorMode == "dark" else "#f0f0f0"};
-            }}
-        """
+        button_style = get_button_style()
         self.ok_button.setStyleSheet(button_style)
         self.cancel_button.setStyleSheet(button_style)
 
@@ -147,11 +112,7 @@ class ButtonEditDialog(QDialog):
         layout.addLayout(button_layout)
 
         # Set dialog style
-        self.setStyleSheet(f"""
-            QDialog {{
-                background-color: {"#2b2b2b" if colorMode == "dark" else "#f0f0f0"};
-            }}
-        """)
+        self.setStyleSheet(get_dialog_style())
 
     def get_button_data(self):
         """Return the button data from the dialog"""

@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ui.UIUtils import ThemeBackground, colorMode, get_resource_path
+from ui.UIUtils import ThemeBackground, colorMode, get_resource_path, get_label_style, get_button_style
 
 _ = lambda x: x
 
