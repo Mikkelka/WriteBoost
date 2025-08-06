@@ -232,9 +232,6 @@ class CustomPopupWindow(QtWidgets.QWidget):
             is_chat_operation = v.get("open_in_window", False)
             
             b = SimpleButton(self, k, k, is_chat_operation=is_chat_operation)
-            icon_path = get_resource_path(v["icon"] + ("_dark" if colorMode == "dark" else "_light") + ".png")
-            if os.path.exists(icon_path):
-                b.setIcon(QtGui.QIcon(icon_path))
 
             b.clicked.connect(partial(self.on_generic_instruction, k))
             self.button_widgets.append(b)

@@ -177,9 +177,6 @@ class ButtonEditWindow(QtWidgets.QWidget):
             is_chat_operation = v.get("open_in_window", False)
             
             b = DraggableButton(self, k, k, is_chat_operation=is_chat_operation)
-            icon_path = get_resource_path(v["icon"] + ("_dark" if colorMode == "dark" else "_light") + ".png")
-            if os.path.exists(icon_path):
-                b.setIcon(QtGui.QIcon(icon_path))
 
             self.add_edit_delete_icons(b)
             self.button_widgets.append(b)
@@ -201,20 +198,19 @@ class ButtonEditWindow(QtWidgets.QWidget):
                 parent_layout.removeItem(grid)
                 break
 
-        # Create new grid with fixed column width
+        # Create new grid with fixed column width (2 columns for wider buttons)
         grid = QtWidgets.QGridLayout()
         grid.setSpacing(10)
-        grid.setColumnMinimumWidth(0, 120)
-        grid.setColumnMinimumWidth(1, 120)
-        grid.setColumnMinimumWidth(2, 120)
+        grid.setColumnMinimumWidth(0, 200)
+        grid.setColumnMinimumWidth(1, 200)
 
-        # Add buttons to grid (3 columns)
+        # Add buttons to grid (2 columns)
         row = 0
         col = 0
         for b in self.button_widgets:
             grid.addWidget(b, row, col)
             col += 1
-            if col > 2:
+            if col > 1:
                 col = 0
                 row += 1
 
@@ -246,9 +242,12 @@ class ButtonEditWindow(QtWidgets.QWidget):
             }}
         """
 
-        # Create edit icon (top-left)
+        # Calculate vertical center for icon positioning
+        center_y = (btn.height() - 16) // 2
+        
+        # Create edit icon (center-right, first position)
         edit_btn = QPushButton(btn.icon_container)
-        edit_btn.setGeometry(3, 3, 16, 16)
+        edit_btn.setGeometry(btn.width() - 45, center_y, 16, 16)
         pencil_icon = get_resource_path(
             os.path.join("icons", "pencil" + ("_dark" if colorMode == "dark" else "_light") + ".png")
         )
@@ -258,9 +257,9 @@ class ButtonEditWindow(QtWidgets.QWidget):
         edit_btn.clicked.connect(partial(self.edit_button_clicked, btn))
         edit_btn.show()
 
-        # Create delete icon (top-right)
+        # Create delete icon (center-right, second position)
         delete_btn = QPushButton(btn.icon_container)
-        delete_btn.setGeometry(btn.width() - 23, 3, 16, 16)
+        delete_btn.setGeometry(btn.width() - 23, center_y, 16, 16)
         del_icon = get_resource_path(
             os.path.join("icons", "cross" + ("_dark" if colorMode == "dark" else "_light") + ".png")
         )
@@ -281,7 +280,6 @@ class ButtonEditWindow(QtWidgets.QWidget):
             data[bd["name"]] = {
                 "prefix": bd["prefix"],
                 "instruction": bd["instruction"],
-                "icon": bd["icon"],  # uses 'icons/custom'
                 "open_in_window": bd["open_in_window"],
             }
             self.save_options(data)
@@ -315,7 +313,6 @@ class ButtonEditWindow(QtWidgets.QWidget):
             data[new_data["name"]] = {
                 "prefix": new_data["prefix"],
                 "instruction": new_data["instruction"],
-                "icon": new_data["icon"],
                 "open_in_window": new_data["open_in_window"],
             }
             self.save_options(data)
@@ -379,37 +376,30 @@ class ButtonEditWindow(QtWidgets.QWidget):
         """
         Reset `options.json` to the DEFAULT_OPTIONS_JSON.
         """
-        confirm_box = QtWidgets.QMessageBox()
-        confirm_box.setWindowTitle("Confirm Reset to Defaults")
-        confirm_box.setText("Are you sure you want to reset all buttons to their original configuration?\nThis will delete any custom buttons you've created.")
-        confirm_box.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-        confirm_box.setDefaultButton(QtWidgets.QMessageBox.No)
+        try:
+            logging.debug("Resetting to default options.json")
+            default_data = json.loads(DEFAULT_OPTIONS_JSON)
+            self.save_options(default_data)
 
-        if confirm_box.exec_() == QtWidgets.QMessageBox.Yes:
-            try:
-                logging.debug("Resetting to default options.json")
-                default_data = json.loads(DEFAULT_OPTIONS_JSON)
-                self.save_options(default_data)
+            self.build_buttons_list()
+            self.rebuild_grid_layout()
 
-                self.build_buttons_list()
-                self.rebuild_grid_layout()
+            QtWidgets.QMessageBox.information(
+                self,
+                "Reset Complete",
+                "All buttons have been reset to their original configuration!\nRestart Writing Tools to see the changes in action.",
+            )
 
-                QtWidgets.QMessageBox.information(
-                    self,
-                    "Reset Complete",
-                    "All buttons have been reset to their original configuration!\nRestart Writing Tools to see the changes in action.",
-                )
+            # Reload app options
+            self.app.config_manager.load_options()
+            self.app.options = self.app.config_manager.options
 
-                # Reload app options
-                self.app.config_manager.load_options()
-                self.app.options = self.app.config_manager.options
-
-            except Exception as e:
-                logging.error(f"Error resetting options.json: {e}")
-                error_msg = QtWidgets.QMessageBox()
-                error_msg.setWindowTitle("Error")
-                error_msg.setText(f"An error occurred while resetting: {str(e)}")
-                error_msg.exec_()
+        except Exception as e:
+            logging.error(f"Error resetting options.json: {e}")
+            error_msg = QtWidgets.QMessageBox()
+            error_msg.setWindowTitle("Error")
+            error_msg.setText(f"An error occurred while resetting: {str(e)}")
+            error_msg.exec_()
 
     def update_json_from_grid(self):
         """

@@ -24,8 +24,8 @@ class DraggableButton(QtWidgets.QPushButton):
         # Use a dynamic property "hover" (default False)
         self.setProperty("hover", False)
 
-        # Set fixed size (adjust as needed)
-        self.setFixedSize(120, 40)
+        # Set fixed size (adjust as needed) - wider to match Add New/Reset buttons
+        self.setFixedSize(200, 50)
 
         # Different styling for chat operations vs direct replacement
         if is_chat_operation:
@@ -45,7 +45,7 @@ class DraggableButton(QtWidgets.QPushButton):
                 background-color: {bg_color};
                 border: 1px solid {border_color};
                 border-radius: 8px;
-                padding: 10px;
+                padding: 12px 50px 12px 15px;
                 font-size: 14px;
                 text-align: left;
                 color: {"#fff" if colorMode == "dark" else "#000"};
