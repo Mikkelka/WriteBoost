@@ -6,18 +6,18 @@ Writing Tools is an Apple Intelligence-inspired application for Windows that sup
 
 ## ⚡ What can Writing Tools do?
 
-### Writing Tools:
+### 🔧 Direct Text Operations (Gray Buttons):
 - Select any text on your PC and invoke Writing Tools with `Ctrl+Space`
-- Choose **Proofread**, **Rewrite**, **Friendly**, **Professional**, **Concise**, or **Custom Instructions**
+- Choose **Proofread**, **Rewrite**, **Friendly**, **Professional**, **Concise**, **Custom Instructions**, or **Oversæt til Dansk**
 - Your text will instantly be replaced with the AI-optimized version. Use `Ctrl+Z` to revert.
+- **Visual Cue:** Gray buttons indicate operations that replace text directly
 
-### Content Summarization:
-- Select text from webpages, documents, emails, etc. with `Ctrl+A`
-- Choose **Summary**, **Key Points**, or **Table** after invoking Writing Tools
-- Get a pop-up summary with beautiful markdown formatting
-- Chat with the summary if you'd like to learn more
+### 💬 Chat Operations (Blue Buttons):
+- Select text and choose **Summary**, **Key Points**, or **Table** for pop-up analysis windows
+- Get beautiful markdown formatting with chat capability to ask follow-up questions
+- **Visual Cue:** Blue-tinted buttons indicate operations that open interactive chat windows
 
-### Chat Mode:
+### 🤖 Chat Mode:
 - Press `Ctrl+Space` without selecting text to start a conversation with Gemini AI
 - Choose between different models and thinking levels for optimal performance
 - Dynamic thinking: AI decides when it needs to think for better responses
@@ -48,19 +48,22 @@ Writing Tools is an Apple Intelligence-inspired application for Windows that sup
    - Enter it in the setup window that appears on first launch
    - Configure separate models for chat (Gemini 2.5 Flash) and text operations (Gemini 2.5 Flash Lite) for optimal performance
 
-## 🎯 Options Explained
+## 🎯 Operations Explained
 
-**Direct Text Replacement:**
+### 🔧 Direct Text Replacement (Gray Buttons):
 - **Proofread:** Grammar & spelling correction
 - **Rewrite:** Improve phrasing and clarity
 - **Friendly/Professional:** Adjust tone of your text
 - **Concise:** Make text shorter while keeping meaning
 - **Custom Instructions:** Your own commands (e.g., "Translate to French", "Add comments to this code")
+- **Oversæt til Dansk:** Translate text to Danish
 
-**Pop-up Window (with chat capability):**
-- **Summarize:** Create clear and concise summaries
-- **Key Points:** Extract the most important points
-- **Table:** Convert text into formatted tables (copy-pastable to MS Word)
+### 💬 Interactive Chat Windows (Blue Buttons):
+- **Summary:** Create clear and concise summaries with follow-up chat
+- **Key Points:** Extract the most important points with analysis capability
+- **Table:** Convert text into formatted markdown tables (copy-pastable to MS Word) with refinement options
+
+**Visual Design:** Operations are color-coded for easy identification - blue buttons open chat windows, gray buttons replace text directly.
 
 ## 💡 Tips
 
@@ -94,12 +97,22 @@ Refer to [Google's Privacy Policy](https://policies.google.com/privacy) for info
 
 ## 🔧 Customization
 
-- **Themes:** Choose between blurry gradient or plain Windows-style theme
+### UI & Interface:
+- **Visual Operation Distinction:** Blue buttons for chat operations, gray for direct replacement
+- **Themes:** Choose between blurry gradient or plain Windows-style theme  
 - **Dark Mode:** Automatically detects your system theme
-- **Hotkey:** Customize the global shortcut key
+- **Hotkey:** Customize the global shortcut key (default: Ctrl+Space)
 - **Auto-start:** Enable starting with Windows
-- **AI Models:** Separate model selection for chat conversations vs text operations
+
+### AI Configuration:
+- **Separate Model Selection:** Different models for chat conversations vs text operations
 - **Thinking Levels:** Configure how much the AI thinks before responding
+- **Intelligent Error Handling:** Automatic retry for temporary API issues
+
+### Button Management:
+- **Edit Tools Window:** Manage, reorder, and customize operation buttons
+- **Add Custom Operations:** Create your own text operations with custom prompts
+- **Visual Consistency:** Same color coding across all windows
 
 ## 🏗️ Building
 
