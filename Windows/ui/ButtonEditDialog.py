@@ -14,19 +14,11 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from ui.UIUtils import colorMode
+from ui.UIUtils import colorMode, get_resource_path
 
 _ = lambda x: x
 
 
-def get_resource_path(relative_path):
-    """Get absolute path to resource, works for dev and for PyInstaller"""
-    try:
-        # PyInstaller creates a temp folder and stores path in _MEIPASS
-        base_path = sys._MEIPASS
-    except AttributeError:
-        base_path = os.path.dirname(sys.argv[0])
-    return os.path.join(base_path, relative_path)
 
 
 

@@ -8,19 +8,11 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QMessageBox
 
 from ui.ChatManager import ChatManager
-from ui.UIUtils import UIUtils, colorMode
+from ui.UIUtils import UIUtils, colorMode, get_resource_path
 
 _ = lambda x: x
 
 
-def get_resource_path(relative_path):
-    """Get absolute path to resource, works for dev and for PyInstaller"""
-    try:
-        # PyInstaller creates a temp folder and stores path in _MEIPASS
-        base_path = sys._MEIPASS
-    except AttributeError:
-        base_path = os.path.dirname(sys.argv[0])
-    return os.path.join(base_path, relative_path)
 
 
 class ChatListItem(QtWidgets.QWidget):
