@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from ui.UIUtils import ThemeBackground, colorMode
-from ui.ButtonEditDialog import ButtonEditDialog, DEFAULT_OPTIONS_JSON
+from ui.ButtonEditDialog import ButtonEditDialog
 from ui.DraggableButton import DraggableButton
 
 _ = lambda x: x
@@ -47,7 +47,7 @@ class ButtonEditWindow(QtWidgets.QWidget):
         main_layout = QtWidgets.QVBoxLayout(self)
         main_layout.setContentsMargins(10, 10, 10, 10)
 
-        self.background = ThemeBackground(self, "simple", is_popup=False, border_radius=10)
+        self.background = ThemeBackground(self, border_radius=10)
         main_layout.addWidget(self.background)
 
         content_layout = QtWidgets.QVBoxLayout(self.background)
@@ -154,6 +154,54 @@ class ButtonEditWindow(QtWidgets.QWidget):
             logging.debug("Options file not found")
             data = {}
         return data
+
+    @staticmethod
+    def load_default_options():
+        """
+        Load the original default options. This replaces the need for DEFAULT_OPTIONS_JSON.
+        """
+        return {
+            "Proofread": {
+                "prefix": "Proofread this:\n\n",
+                "instruction": "You are a grammar proofreading assistant.\nOutput ONLY the corrected text without any additional comments.\nMaintain the original text structure and writing style.\nRespond in the same language as the input (e.g., English US, French).\nDo not answer or respond to the user's text content.\nIf the text is absolutely incompatible with this (e.g., totally random gibberish), output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
+                "open_in_window": False
+            },
+            "Rewrite": {
+                "prefix": "Rewrite this:\n\n",
+                "instruction": "You are a writing assistant.\nRewrite the text provided by the user to improve phrasing.\nOutput ONLY the rewritten text without additional comments.\nRespond in the same language as the input (e.g., English US, French).\nDo not answer or respond to the user's text content.\nIf the text is absolutely incompatible with proofreading (e.g., totally random gibberish), output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
+                "open_in_window": False
+            },
+            "Summary": {
+                "prefix": "Original text to summarize:\n\n",
+                "instruction": "You are an expert text summarizer.\nProvide a comprehensive summary of the given text that captures the main points, key details, and overall message.\nUse Markdown formatting with appropriate headers, bullet points, and emphasis where helpful.\nMaintain the tone and style appropriate to the source material.\nEnsure the summary is concise yet complete, typically 20-30% of the original length.",
+                "open_in_window": True
+            },
+            "Key Points": {
+                "prefix": "Original text to extract key points:\n\n",
+                "instruction": "You are an expert at extracting key information.\nAnalyze the given text and extract the most important key points.\nPresent the key points as a well-organized list using Markdown formatting.\nUse bullet points or numbered lists as appropriate.\nHighlight the most critical information using **bold** text.\nEnsure each point is clear, concise, and captures essential information.",
+                "open_in_window": True
+            },
+            "Friendly": {
+                "prefix": "Make this sound more friendly:\n\n",
+                "instruction": "You are a writing assistant focused on tone adjustment.\nRewrite the text to sound more friendly, warm, and approachable while maintaining the core message.\nOutput ONLY the rewritten text without additional comments.\nKeep the same language as the input.\nMaintain professionalism while adding warmth.\nIf the text is incompatible with this request, output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
+                "open_in_window": False
+            },
+            "Professional": {
+                "prefix": "Make this sound more professional:\n\n",
+                "instruction": "You are a writing assistant focused on professional tone.\nRewrite the text to sound more professional, formal, and business-appropriate while maintaining the core message.\nOutput ONLY the rewritten text without additional comments.\nKeep the same language as the input.\nUse appropriate professional vocabulary and structure.\nIf the text is incompatible with this request, output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
+                "open_in_window": False
+            },
+            "Concise": {
+                "prefix": "Make this more concise:\n\n",
+                "instruction": "You are a writing assistant focused on brevity.\nRewrite the text to be more concise and to-the-point while preserving all essential information and meaning.\nOutput ONLY the rewritten text without additional comments.\nKeep the same language as the input.\nEliminate redundancy, filler words, and unnecessary elaboration.\nIf the text is incompatible with this request, output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
+                "open_in_window": False
+            },
+            "Custom": {
+                "prefix": "",
+                "instruction": "You are a helpful writing assistant. Follow the user's instructions precisely and provide clear, accurate assistance with their text.",
+                "open_in_window": False
+            }
+        }
 
     @staticmethod
     def save_options(options):
@@ -392,11 +440,11 @@ class ButtonEditWindow(QtWidgets.QWidget):
 
     def on_reset_clicked(self):
         """
-        Reset `options.json` to the DEFAULT_OPTIONS_JSON.
+        Reset `options.json` to the default options.
         """
         try:
             logging.debug("Resetting to default options.json")
-            default_data = json.loads(DEFAULT_OPTIONS_JSON)
+            default_data = self.load_default_options()
             self.save_options(default_data)
 
             self.build_buttons_list()

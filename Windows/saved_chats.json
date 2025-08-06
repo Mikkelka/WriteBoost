@@ -1,16 +1,32 @@
 [
   {
-    "id": "chat_1750700729",
-    "title": "Model\tDefault setting\r\n(Thinking budget is not set...",
-    "timestamp": "2025-06-23T19:45:29.966108",
+    "id": "chat_1754498996",
+    "title": "hej google",
+    "timestamp": "2025-08-06T18:49:56.387478",
     "chat_history": [
       {
         "role": "user",
-        "content": "Original text to summary:\n\nModel\tDefault setting\r\n(Thinking budget is not set)\tRange\tDisable thinking\tTurn on dynamic thinking\r\n2.5 Pro\tDynamic thinking: Model decides when and how much to think\t128 to 32768\tN/A: Cannot disable thinking\tthinkingBudget = -1\r\n2.5 Flash\tDynamic thinking: Model decides when and how much to think\t0 to 24576\tthinkingBudget = 0\tthinkingBudget = -1\r\n2.5 Flash Lite\tModel does not think\t512 to 24576\tthinkingBudget = 0\tthinkingBudget = -1"
+        "content": "hej google"
       },
       {
         "role": "assistant",
-        "content": "This document outlines the thinking budget settings for different Gemini models:\n\n*   **Gemini 2.5 Pro** uses dynamic thinking by default, allowing the model to decide its thinking allocation. It has a thinking budget range of 128 to 32768 and cannot disable thinking. Setting `thinkingBudget = -1` enables dynamic thinking.\n\n*   **Gemini 2.5 Flash** also uses dynamic thinking by default. Its thinking budget ranges from 0 to 24576. Thinking can be disabled by setting `thinkingBudget = 0`, and dynamic thinking is enabled with `thinkingBudget = -1`.\n\n*   **Gemini 2.5 Flash Lite** does not think by default. Its thinking budget ranges from 512 to 24576. Thinking is disabled with `thinkingBudget = 0`, and dynamic thinking is enabled with `thinkingBudget = -1`."
+        "content": "Hej! Tack för hälsningen. 👋\n\nJag är en stor språkmodell, tränad av Google. Hur kan jag hjälpa dig idag? 😊"
+      },
+      {
+        "role": "user",
+        "content": "hvad siger du?"
+      },
+      {
+        "role": "assistant",
+        "content": "Hej! Jeg sagde hej til dig og fortalte, at jeg er en stor sprogmodel, der er trænet af Google.\n\nJeg spurgte også, hvordan jeg kan hjælpe dig i dag. 😊 Var der noget, du tænkte på?"
+      },
+      {
+        "role": "user",
+        "content": "var det svensk?"
+      },
+      {
+        "role": "assistant",
+        "content": "Nej, det du lige læste var på **dansk**. 😊\n\nJeg kan godt forstå, hvorfor du spørger, for mit første svar til dig var på svensk (\"Hej! Tack för hälsningen...\"). Men da du så spurgte \"hvad siger du?\", svarede jeg dig på dansk.\n\nJeg kan snakke begge sprog! Siger bare til, hvis du foretrækker det ene frem for det andet."
       }
     ]
   }

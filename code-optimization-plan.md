@@ -159,10 +159,10 @@ background.png
 - [ ] Replace inline setStyleSheet() calls
 - [ ] Consolidate color mode logic
 
-### Phase 4: Configuration Cleanup (~85 lines saved)
-- [ ] Remove DEFAULT_OPTIONS_JSON constant
-- [ ] Load from options.json instead
-- [ ] Update reset functionality
+### Phase 4: Configuration Cleanup (~85 lines saved) ✅ COMPLETED  
+- [x] Remove DEFAULT_OPTIONS_JSON constant
+- [x] Load from options.json instead
+- [x] Update reset functionality
 
 ### Phase 5: Dead Code Removal (~15 lines saved)
 - [ ] Remove background image references

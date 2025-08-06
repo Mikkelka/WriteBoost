@@ -121,7 +121,7 @@ class CustomPopupWindow(QtWidgets.QWidget):
         main_layout = QtWidgets.QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
 
-        self.background = ThemeBackground(self, "simple", is_popup=True, border_radius=10)
+        self.background = ThemeBackground(self, border_radius=10)
         main_layout.addWidget(self.background)
 
         content_layout = QtWidgets.QVBoxLayout(self.background)
