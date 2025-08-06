@@ -277,12 +277,27 @@ class ButtonEditWindow(QtWidgets.QWidget):
         if dialog.exec_():
             bd = dialog.get_button_data()
             data = self.load_options()
-            data[bd["name"]] = {
+            
+            # Create new ordered data with existing buttons first
+            new_data = {}
+            
+            # Add existing buttons first
+            for key, value in data.items():
+                if key != "Custom":  # Skip Custom section for now
+                    new_data[key] = value
+            
+            # Add new button at the end
+            new_data[bd["name"]] = {
                 "prefix": bd["prefix"],
                 "instruction": bd["instruction"],
                 "open_in_window": bd["open_in_window"],
             }
-            self.save_options(data)
+                    
+            # Add Custom section at the end if it exists
+            if "Custom" in data:
+                new_data["Custom"] = data["Custom"]
+                
+            self.save_options(new_data)
 
             self.build_buttons_list()
             self.rebuild_grid_layout()
@@ -333,12 +348,15 @@ class ButtonEditWindow(QtWidgets.QWidget):
     def delete_button_clicked(self, btn):
         """Handle deletion of a button."""
         key = btn.key
-        confirm = QtWidgets.QMessageBox()
+        
+        # Confirmation dialog - set parent to None to ensure it stays on top
+        confirm = QtWidgets.QMessageBox(None)
         confirm.setWindowTitle("Confirm Delete")
         confirm.setText(f"Are you sure you want to delete the '{key}' button?")
         confirm.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
         confirm.setDefaultButton(QtWidgets.QMessageBox.No)
-
+        confirm.setWindowFlags(confirm.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        
         if confirm.exec_() == QtWidgets.QMessageBox.Yes:
             try:
                 data = self.load_options()
@@ -407,9 +425,16 @@ class ButtonEditWindow(QtWidgets.QWidget):
         so that user's custom arrangement persists.
         """
         data = self.load_options()
-        new_data = {"Custom": data["Custom"]} if "Custom" in data else {}
+        new_data = {}
+        
+        # Add buttons in their current UI order
         for b in self.button_widgets:
             new_data[b.key] = data[b.key]
+            
+        # Add Custom section at the end if it exists
+        if "Custom" in data:
+            new_data["Custom"] = data["Custom"]
+            
         self.save_options(new_data)
         
         # Reload app options

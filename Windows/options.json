@@ -11,17 +11,16 @@
     "icon": "icons/rewrite",
     "open_in_window": false
   },
-  "Summary": {
-    "prefix": "Original text to summarize:\n\n",
-    "instruction": "You are an expert text summarizer.\nProvide a comprehensive summary of the given text that captures the main points, key details, and overall message.\nUse Markdown formatting with appropriate headers, bullet points, and emphasis where helpful.\nMaintain the tone and style appropriate to the source material.\nEnsure the summary is concise yet complete, typically 20-30% of the original length.",
-    "icon": "icons/summary",
-    "open_in_window": true
+  "Dansk": {
+    "prefix": "Make this change to the following text:\n\n",
+    "instruction": "Overs\u00e6t teksten til Dansk og output kun det overs\u00e6ttede tekst",
+    "open_in_window": false
   },
-  "Key Points": {
-    "prefix": "Original text to extract key points:\n\n",
-    "instruction": "You are an expert at extracting key information.\nAnalyze the given text and extract the most important key points.\nPresent the key points as a well-organized list using Markdown formatting.\nUse bullet points or numbered lists as appropriate.\nHighlight the most critical information using **bold** text.\nEnsure each point is clear, concise, and captures essential information.",
-    "icon": "icons/keypoints",
-    "open_in_window": true
+  "Concise": {
+    "prefix": "Make this more concise:\n\n",
+    "instruction": "You are a writing assistant focused on brevity.\nRewrite the text to be more concise and to-the-point while preserving all essential information and meaning.\nOutput ONLY the rewritten text without additional comments.\nKeep the same language as the input.\nEliminate redundancy, filler words, and unnecessary elaboration.\nIf the text is incompatible with this request, output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
+    "icon": "icons/concise",
+    "open_in_window": false
   },
   "Friendly": {
     "prefix": "Make this sound more friendly:\n\n",
@@ -35,21 +34,22 @@
     "icon": "icons/briefcase",
     "open_in_window": false
   },
-  "Concise": {
-    "prefix": "Make this more concise:\n\n",
-    "instruction": "You are a writing assistant focused on brevity.\nRewrite the text to be more concise and to-the-point while preserving all essential information and meaning.\nOutput ONLY the rewritten text without additional comments.\nKeep the same language as the input.\nEliminate redundancy, filler words, and unnecessary elaboration.\nIf the text is incompatible with this request, output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
-    "icon": "icons/concise",
-    "open_in_window": false
+  "Key Points": {
+    "prefix": "Original text to extract key points:\n\n",
+    "instruction": "You are an expert at extracting key information.\nAnalyze the given text and extract the most important key points.\nPresent the key points as a well-organized list using Markdown formatting.\nUse bullet points or numbered lists as appropriate.\nHighlight the most critical information using **bold** text.\nEnsure each point is clear, concise, and captures essential information.",
+    "icon": "icons/keypoints",
+    "open_in_window": true
+  },
+  "Summary": {
+    "prefix": "Original text to summarize:\n\n",
+    "instruction": "You are an expert text summarizer.\nProvide a comprehensive summary of the given text that captures the main points, key details, and overall message.\nUse Markdown formatting with appropriate headers, bullet points, and emphasis where helpful.\nMaintain the tone and style appropriate to the source material.\nEnsure the summary is concise yet complete, typically 20-30% of the original length.",
+    "icon": "icons/summary",
+    "open_in_window": true
   },
   "Custom": {
     "prefix": "",
     "instruction": "You are a helpful writing assistant. Follow the user's instructions precisely and provide clear, accurate assistance with their text.",
     "icon": "icons/custom",
-    "open_in_window": false
-  },
-  "Dansk": {
-    "prefix": "Make this change to the following text:\n\n",
-    "instruction": "Overs\u00e6t teksten til Dansk og output kun det overs\u00e6ttede tekst",
     "open_in_window": false
   }
 }
