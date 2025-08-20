@@ -13,21 +13,13 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from ui.UIUtils import ThemeBackground, colorMode
-from ui.ButtonEditDialog import ButtonEditDialog, DEFAULT_OPTIONS_JSON
+from ui.UIUtils import ThemeBackground, colorMode, get_resource_path, get_title_style, get_label_style, get_button_style
+from ui.ButtonEditDialog import ButtonEditDialog
 from ui.DraggableButton import DraggableButton
 
 _ = lambda x: x
 
 
-def get_resource_path(relative_path):
-    """Get absolute path to resource, works for dev and for PyInstaller"""
-    try:
-        # PyInstaller creates a temp folder and stores path in _MEIPASS
-        base_path = sys._MEIPASS
-    except AttributeError:
-        base_path = os.path.dirname(sys.argv[0])
-    return os.path.join(base_path, relative_path)
 
 
 class ButtonEditWindow(QtWidgets.QWidget):
@@ -47,7 +39,7 @@ class ButtonEditWindow(QtWidgets.QWidget):
         main_layout = QtWidgets.QVBoxLayout(self)
         main_layout.setContentsMargins(10, 10, 10, 10)
 
-        self.background = ThemeBackground(self, "simple", is_popup=False, border_radius=10)
+        self.background = ThemeBackground(self, border_radius=10)
         main_layout.addWidget(self.background)
 
         content_layout = QtWidgets.QVBoxLayout(self.background)
@@ -56,22 +48,13 @@ class ButtonEditWindow(QtWidgets.QWidget):
 
         # Title
         title_label = QLabel("Edit Writing Tools Buttons")
-        title_label.setStyleSheet(f"""
-            color: {"#fff" if colorMode == "dark" else "#333"};
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        """)
+        title_label.setStyleSheet(get_title_style())
         title_label.setAlignment(Qt.AlignCenter)
         content_layout.addWidget(title_label)
 
         # Instructions
         instruction_label = QLabel("Drag to rearrange • Click edit/delete icons to modify buttons")
-        instruction_label.setStyleSheet(f"""
-            color: {"#aaa" if colorMode == "dark" else "#666"};
-            font-size: 12px;
-            margin-bottom: 15px;
-        """)
+        instruction_label.setStyleSheet(get_label_style(color_type="muted", font_size=12) + " margin-bottom: 15px;")
         instruction_label.setAlignment(Qt.AlignCenter)
         content_layout.addWidget(instruction_label)
 
@@ -84,39 +67,13 @@ class ButtonEditWindow(QtWidgets.QWidget):
         
         # Add New button
         add_btn = QPushButton("+ Add New")
-        add_btn.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {"#2e7d32" if colorMode == "dark" else "#4CAF50"};
-                color: white;
-                border: none;
-                border-radius: 8px;
-                padding: 10px 20px;
-                font-size: 14px;
-                font-weight: bold;
-            }}
-            QPushButton:hover {{
-                background-color: {"#1b5e20" if colorMode == "dark" else "#45a049"};
-            }}
-        """)
+        add_btn.setStyleSheet(get_button_style("green"))
         add_btn.clicked.connect(self.add_new_button_clicked)
         button_layout.addWidget(add_btn)
 
         # Reset button
         reset_btn = QPushButton("Reset to Defaults")
-        reset_btn.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {"#d32f2f" if colorMode == "dark" else "#f44336"};
-                color: white;
-                border: none;
-                border-radius: 8px;
-                padding: 10px 20px;
-                font-size: 14px;
-                font-weight: bold;
-            }}
-            QPushButton:hover {{
-                background-color: {"#b71c1c" if colorMode == "dark" else "#d32f2f"};
-            }}
-        """)
+        reset_btn.setStyleSheet(get_button_style("red"))
         reset_btn.clicked.connect(self.on_reset_clicked)
         button_layout.addWidget(reset_btn)
 
@@ -124,20 +81,7 @@ class ButtonEditWindow(QtWidgets.QWidget):
 
         # Close button
         close_btn = QPushButton("Close")
-        close_btn.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {"#444" if colorMode == "dark" else "#f0f0f0"};
-                color: {"#fff" if colorMode == "dark" else "#000"};
-                border: 1px solid {"#666" if colorMode == "dark" else "#ccc"};
-                border-radius: 8px;
-                padding: 10px 20px;
-                font-size: 14px;
-                margin-top: 10px;
-            }}
-            QPushButton:hover {{
-                background-color: {"#555" if colorMode == "dark" else "#e0e0e0"};
-            }}
-        """)
+        close_btn.setStyleSheet(get_button_style() + " margin-top: 10px;")
         close_btn.clicked.connect(self.close)
         content_layout.addWidget(close_btn)
 
@@ -154,6 +98,54 @@ class ButtonEditWindow(QtWidgets.QWidget):
             logging.debug("Options file not found")
             data = {}
         return data
+
+    @staticmethod
+    def load_default_options():
+        """
+        Load the original default options. This replaces the need for DEFAULT_OPTIONS_JSON.
+        """
+        return {
+            "Proofread": {
+                "prefix": "Proofread this:\n\n",
+                "instruction": "You are a grammar proofreading assistant.\nOutput ONLY the corrected text without any additional comments.\nMaintain the original text structure and writing style.\nRespond in the same language as the input (e.g., English US, French).\nDo not answer or respond to the user's text content.\nIf the text is absolutely incompatible with this (e.g., totally random gibberish), output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
+                "open_in_window": False
+            },
+            "Rewrite": {
+                "prefix": "Rewrite this:\n\n",
+                "instruction": "You are a writing assistant.\nRewrite the text provided by the user to improve phrasing.\nOutput ONLY the rewritten text without additional comments.\nRespond in the same language as the input (e.g., English US, French).\nDo not answer or respond to the user's text content.\nIf the text is absolutely incompatible with proofreading (e.g., totally random gibberish), output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
+                "open_in_window": False
+            },
+            "Summary": {
+                "prefix": "Original text to summarize:\n\n",
+                "instruction": "You are an expert text summarizer.\nProvide a comprehensive summary of the given text that captures the main points, key details, and overall message.\nUse Markdown formatting with appropriate headers, bullet points, and emphasis where helpful.\nMaintain the tone and style appropriate to the source material.\nEnsure the summary is concise yet complete, typically 20-30% of the original length.",
+                "open_in_window": True
+            },
+            "Key Points": {
+                "prefix": "Original text to extract key points:\n\n",
+                "instruction": "You are an expert at extracting key information.\nAnalyze the given text and extract the most important key points.\nPresent the key points as a well-organized list using Markdown formatting.\nUse bullet points or numbered lists as appropriate.\nHighlight the most critical information using **bold** text.\nEnsure each point is clear, concise, and captures essential information.",
+                "open_in_window": True
+            },
+            "Friendly": {
+                "prefix": "Make this sound more friendly:\n\n",
+                "instruction": "You are a writing assistant focused on tone adjustment.\nRewrite the text to sound more friendly, warm, and approachable while maintaining the core message.\nOutput ONLY the rewritten text without additional comments.\nKeep the same language as the input.\nMaintain professionalism while adding warmth.\nIf the text is incompatible with this request, output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
+                "open_in_window": False
+            },
+            "Professional": {
+                "prefix": "Make this sound more professional:\n\n",
+                "instruction": "You are a writing assistant focused on professional tone.\nRewrite the text to sound more professional, formal, and business-appropriate while maintaining the core message.\nOutput ONLY the rewritten text without additional comments.\nKeep the same language as the input.\nUse appropriate professional vocabulary and structure.\nIf the text is incompatible with this request, output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
+                "open_in_window": False
+            },
+            "Concise": {
+                "prefix": "Make this more concise:\n\n",
+                "instruction": "You are a writing assistant focused on brevity.\nRewrite the text to be more concise and to-the-point while preserving all essential information and meaning.\nOutput ONLY the rewritten text without additional comments.\nKeep the same language as the input.\nEliminate redundancy, filler words, and unnecessary elaboration.\nIf the text is incompatible with this request, output \"ERROR_TEXT_INCOMPATIBLE_WITH_REQUEST\".",
+                "open_in_window": False
+            },
+            "Custom": {
+                "prefix": "",
+                "instruction": "You are a helpful writing assistant. Follow the user's instructions precisely and provide clear, accurate assistance with their text.",
+                "open_in_window": False
+            }
+        }
 
     @staticmethod
     def save_options(options):
@@ -392,11 +384,11 @@ class ButtonEditWindow(QtWidgets.QWidget):
 
     def on_reset_clicked(self):
         """
-        Reset `options.json` to the DEFAULT_OPTIONS_JSON.
+        Reset `options.json` to the default options.
         """
         try:
             logging.debug("Resetting to default options.json")
-            default_data = json.loads(DEFAULT_OPTIONS_JSON)
+            default_data = self.load_default_options()
             self.save_options(default_data)
 
             self.build_buttons_list()

@@ -5,8 +5,8 @@ import sys
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtCore import Qt, Slot
 
-from ui.UIUtils import UIUtils, colorMode
-from ui.MarkdownDisplay import MarkdownTextBrowser, get_resource_path
+from ui.UIUtils import UIUtils, colorMode, get_resource_path
+from ui.MarkdownDisplay import MarkdownTextBrowser
 from ui.ChatScrollArea import ChatContentScrollArea
 from ui.ChatMessageManager import ChatMessageManager
 

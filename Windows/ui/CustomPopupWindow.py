@@ -18,19 +18,11 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ui.UIUtils import ThemeBackground, colorMode
+from ui.UIUtils import ThemeBackground, colorMode, get_resource_path, get_label_style, get_button_style
 
 _ = lambda x: x
 
 
-def get_resource_path(relative_path):
-    """Get absolute path to resource, works for dev and for PyInstaller"""
-    try:
-        # PyInstaller creates a temp folder and stores path in _MEIPASS
-        base_path = sys._MEIPASS
-    except AttributeError:
-        base_path = os.path.dirname(sys.argv[0])
-    return os.path.join(base_path, relative_path)
 
 
 
@@ -121,7 +113,7 @@ class CustomPopupWindow(QtWidgets.QWidget):
         main_layout = QtWidgets.QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
 
-        self.background = ThemeBackground(self, "simple", is_popup=True, border_radius=10)
+        self.background = ThemeBackground(self, border_radius=10)
         main_layout.addWidget(self.background)
 
         content_layout = QtWidgets.QVBoxLayout(self.background)
