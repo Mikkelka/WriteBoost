@@ -30,3 +30,8 @@ __pycache__/
 
 # Ruff cache
 .ruff_cache/
+
+# AI-Tool
+/CLAUDE.local.md
+AI-Tool/
+/AI-Tool

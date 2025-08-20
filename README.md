@@ -1,125 +1,189 @@
 # Writing Tools (Gemini Edition)
 
-**Instantly proofread and optimize your writing system-wide with AI**
+[![Python](https://img.shields.io/badge/python-v3.8+-blue.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Qt](https://img.shields.io/badge/Qt-PySide6-41CD52?style=for-the-badge&logo=qt&logoColor=white)](https://www.qt.io/)
+[![Google Gemini](https://img.shields.io/badge/Google_Gemini-8E75B2?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
+[![Windows](https://img.shields.io/badge/Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white)](https://www.microsoft.com/windows/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](#licens)
 
-Writing Tools is an Apple Intelligence-inspired application for Windows that supercharges your writing with Google's Gemini AI. With one hotkey press system-wide, it lets you fix grammar, optimize text, summarize content, and more.
+**AI-drevet skriveasssistent til Windows - optimér dit skriveri overalt på systemet**
 
-## ⚡ What can Writing Tools do?
+Writing Tools er en Apple Intelligence-inspireret applikation til Windows, der giver dig adgang til Google's Gemini AI overalt på dit system. Med et enkelt tastaturkombination kan du rette grammatik, omskrive tekst, opsummere indhold og meget mere - direkte i enhver applikation.
 
-### 🔧 Direct Text Operations (Gray Buttons):
-- Select any text on your PC and invoke Writing Tools with `Ctrl+Space`
-- Choose **Proofread**, **Rewrite**, **Friendly**, **Professional**, **Concise**, **Custom Instructions**, or **Oversæt til Dansk**
-- Your text will instantly be replaced with the AI-optimized version. Use `Ctrl+Z` to revert.
-- **Visual Cue:** Gray buttons indicate operations that replace text directly
+## ⚡ Hvad kan Writing Tools?
 
-### 💬 Chat Operations (Blue Buttons):
-- Select text and choose **Summary**, **Key Points**, or **Table** for pop-up analysis windows
-- Get beautiful markdown formatting with chat capability to ask follow-up questions
-- **Visual Cue:** Blue-tinted buttons indicate operations that open interactive chat windows
+### 🔧 Direkte Teksterstatning (Grå Knapper)
+- Vælg vilkårlig tekst på din PC og aktiver Writing Tools med `Ctrl+Space`
+- Vælg **Korrektur**, **Omskriv**, **Venlig**, **Professionel**, **Koncis**, **Brugerdefineret** eller **Oversæt til Dansk**
+- Din tekst erstattes øjeblikkeligt med den AI-optimerede version. Brug `Ctrl+Z` for at fortryde
+- **Visuelt Hint:** Grå knapper indikerer operationer, der erstatter tekst direkte
 
-### 🤖 Chat Mode:
-- Press `Ctrl+Space` without selecting text to start a conversation with Gemini AI
-- Choose between different models and thinking levels for optimal performance
-- Dynamic thinking: AI decides when it needs to think for better responses
-- Save and continue conversations with built-in chat history
-- Real-time model switching within conversations
+### 💬 Chat-operationer (Blå Knapper)
+- Vælg tekst og vælg **Resumé**, **Nøglepunkter** eller **Tabel** for interaktive analysevindue
+- Få smuk markdown-formatering med chat-funktionalitet til opfølgende spørgsmål
+- **Visuelt Hint:** Blåtonede knapper indikerer operationer, der åbner interaktive chat-vinduer
 
-## 🚀 Installation & Setup
+### 🤖 Chat-tilstand
+- Tryk `Ctrl+Space` uden at vælge tekst for at starte en samtale med Gemini AI
+- Vælg mellem forskellige modeller og tænkeniveauer for optimal ydeevne
+- Dynamisk tænkning: AI'en beslutter, hvornår den skal tænke for bedre svar
+- Gem og fortsæt samtaler med indbygget chat-historik
+- Real-time modelskift inden for samtaler
 
-### Requirements:
-- Windows (tested on Windows 10/11)
-- Python 3.8 or later
-- Google Gemini API key (free from [Google AI Studio](https://aistudio.google.com/app/apikey))
+## 🚀 Installation & Opsætning
 
-### Installation:
-1. **Install Python dependencies:**
+### Krav
+- Windows (testet på Windows 10/11)
+- Python 3.8 eller nyere
+- Google Gemini API-nøgle (gratis fra [Google AI Studio](https://aistudio.google.com/app/apikey))
+
+### Installation
+1. **Installer Python-dependencies:**
    ```bash
    cd Windows
    pip install -r requirements.txt
    ```
 
-2. **Run the application:**
+2. **Kør applikationen:**
    ```bash
    python main.py
    ```
 
-3. **Setup Gemini API:**
-   - Get your free API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
-   - Enter it in the setup window that appears on first launch
-   - Configure separate models for chat (Gemini 2.5 Flash) and text operations (Gemini 2.5 Flash Lite) for optimal performance
+3. **Opsæt Gemini API:**
+   - Hent din gratis API-nøgle fra [Google AI Studio](https://aistudio.google.com/app/apikey)
+   - Indtast den i opsætningsvinduet, der vises ved første opstart
+   - Konfigurer separate modeller til chat (Gemini 2.5 Flash) og tekstoperationer (Gemini 2.5 Flash Lite) for optimal ydeevne
 
-## 🎯 Operations Explained
+## 🛠️ Teknologier
 
-### 🔧 Direct Text Replacement (Gray Buttons):
-- **Proofread:** Grammar & spelling correction
-- **Rewrite:** Improve phrasing and clarity
-- **Friendly/Professional:** Adjust tone of your text
-- **Concise:** Make text shorter while keeping meaning
-- **Custom Instructions:** Your own commands (e.g., "Translate to French", "Add comments to this code")
-- **Oversæt til Dansk:** Translate text to Danish
+Dette projekt er bygget med følgende teknologier:
 
-### 💬 Interactive Chat Windows (Blue Buttons):
-- **Summary:** Create clear and concise summaries with follow-up chat
-- **Key Points:** Extract the most important points with analysis capability
-- **Table:** Convert text into formatted markdown tables (copy-pastable to MS Word) with refinement options
+- **Python 3.8+** - Hovedprogrammeringssprog
+- **PySide6 (Qt)** - GUI-framework til brugergrænsefladen
+- **Google Gemini AI** - AI-provider til tekstprocessering og chat
+- **pynput** - Global hotkey-detektion og tastatur simulation
+- **pyperclip** - Udklipsholder-operationer til teksthåndtering
+- **markdown2** - Markdown-rendering i svarvinduerne
+- **PyInstaller** - Til oprettelse af selvstændige eksekverbare filer
 
-**Visual Design:** Operations are color-coded for easy identification - blue buttons open chat windows, gray buttons replace text directly.
+## 🎯 Operationer Forklaret
+
+### 🔧 Direkte Teksterstatning (Grå Knapper)
+- **Korrektur:** Grammatik- og stavekontrol
+- **Omskriv:** Forbedre formulering og klarhed
+- **Venlig/Professionel:** Juster tonefald i din tekst
+- **Koncis:** Gør tekst kortere men bevar betydningen
+- **Brugerdefineret:** Dine egne kommandoer (f.eks. "Oversæt til fransk", "Tilføj kommentarer til denne kode")
+- **Oversæt til Dansk:** Oversæt tekst til dansk
+
+### 💬 Interaktive Chat-vinduer (Blå Knapper)
+- **Resumé:** Opret klare og koncise resuméer med opfølgende chat
+- **Nøglepunkter:** Udtræk de vigtigste punkter med analysemuligheder
+- **Tabel:** Konverter tekst til formaterede markdown-tabeller (kan kopieres til MS Word) med forfiningsmuligheder
+
+**Visuelt Design:** Operationer er farvekodede for let identifikation - blå knapper åbner chat-vinduer, grå knapper erstatter tekst direkte.
 
 ## 💡 Tips
 
-### MS Word Users:
-The `Ctrl+Space` shortcut may conflict with Word's "Clear Formatting". To avoid this:
-- Change Writing Tools hotkey to `Ctrl+J` or `Ctrl+\`` in Settings
-- Or disable Word's shortcut in Word > File > Options > Customize Ribbon > Keyboard Shortcuts
+### MS Word-brugere
+`Ctrl+Space` kan konflikte med Word's "Ryd formatering". For at undgå dette:
+- Skift Writing Tools' hotkey til `Ctrl+J` eller `Ctrl+\`` i indstillinger
+- Eller deaktiver Word's genvej i Word > Filer > Indstillinger > Tilpas bånd > Tastaturgenveje
 
-**Note:** Word's rich-text formatting (bold, italics, colors) will be lost when using Writing Tools. Consider using a Markdown editor like [Obsidian](https://obsidian.md/) for better compatibility.
+**Bemærk:** Word's rich-text-formatering (fed, kursiv, farver) går tabt ved brug af Writing Tools. Overvej at bruge en Markdown-editor som [Obsidian](https://obsidian.md/) for bedre kompatibilitet.
 
-### YouTube Video Summaries:
-1. Open a YouTube video
-2. Copy the transcript from the video description
-3. Select all text and use Writing Tools "Summary"
+### YouTube Video-resuméer
+1. Åbn en YouTube-video
+2. Kopiér transskriptionen fra videobeskrivelsen
+3. Vælg al tekst og brug Writing Tools "Resumé"
 
-## 🔒 Privacy
+## 🏗️ Bygning
 
-Writing Tools respects your privacy:
-- Does not collect or store any of your writing data
-- Only sends text to Google's Gemini API when you explicitly use a function
-- API key is stored locally on your device
-- Chat history can be saved locally (optional) or deleted when windows are closed
-- All data remains on your device unless explicitly sent to AI
-
-Refer to [Google's Privacy Policy](https://policies.google.com/privacy) for information about data sent to Gemini.
-
-## 🐞 Known Issues
-
-1. **Hotkey not working:** Try changing to `Ctrl+J` or `Ctrl+\`` in Settings and restart
-2. **Slow first launch:** Antivirus software may scan the executable extensively on first run
-
-## 🔧 Customization
-
-### UI & Interface:
-- **Visual Operation Distinction:** Blue buttons for chat operations, gray for direct replacement
-- **Themes:** Choose between blurry gradient or plain Windows-style theme  
-- **Dark Mode:** Automatically detects your system theme
-- **Hotkey:** Customize the global shortcut key (default: Ctrl+Space)
-- **Auto-start:** Enable starting with Windows
-
-### AI Configuration:
-- **Separate Model Selection:** Different models for chat conversations vs text operations
-- **Thinking Levels:** Configure how much the AI thinks before responding
-- **Intelligent Error Handling:** Automatic retry for temporary API issues
-
-### Button Management:
-- **Edit Tools Window:** Manage, reorder, and customize operation buttons
-- **Add Custom Operations:** Create your own text operations with custom prompts
-- **Visual Consistency:** Same color coding across all windows
-
-## 🏗️ Building
-
-To create a standalone executable:
+For at oprette en selvstændig eksekverbar fil:
 ```bash
 cd Windows
 python pyinstaller-build-script.py
 ```
 
-The executable will be created in the `dist/` folder.
+Den eksekverbare fil oprettes i `dist/` mappen.
+
+## 📜 Projektoprindelse
+
+Dette projekt er oprindeligt baseret på [theJayTea/WritingTools](https://github.com/theJayTea/WritingTools), men er udviklet så meget videre, at det ikke længere kan betragtes som en fork. 
+
+### 🔄 Væsentlige ændringer fra originalen:
+- **Platform-fokus:** Fjernet macOS og Linux support, fokuseret udelukkende på Windows
+- **Simplificeret arkitektur:** Omstruktureret kodebasen med manager-baseret arkitektur
+- **Chat-funktionalitet:** Tilføjet komplet chat-system med Gemini AI integration
+- **Chat-historik:** Persistent chatlagring med mulighed for at genoptage samtaler
+- **Forbedret UI:** Redesignet brugergrænsefladen med bedre UX og visual cues
+- **AI-provider system:** Modulær AI-provider arkitektur (kun Gemini understøttet)
+- **Dansk lokalisering:** Tilføjet danske oversættelser og funktioner
+
+Projektet er nu et selvstændigt værktøj med signifikant anderledes funktionalitet og arkitektur end det oprindelige.
+
+## 🗂️ Projektstruktur
+
+```
+WritingTools - mka/
+├── Windows/                    # Hovedapplikation
+│   ├── main.py                # Indgangspunkt
+│   ├── WritingToolApp.py      # Hovedapplikation
+│   ├── *Manager.py            # Modulære managers (Config, Hotkey, etc.)
+│   ├── *Provider.py           # AI-provider system
+│   ├── ui/                    # UI-komponenter
+│   │   ├── ResponseWindow.py  # Chat-vindue
+│   │   ├── SettingsWindow.py  # Indstillinger
+│   │   └── ...               # Øvrige UI-filer
+│   ├── icons/                 # Ikoner og grafik
+│   ├── options.json          # Skriveoperation-definitioner
+│   └── requirements.txt      # Python-dependencies
+├── CLAUDE.md                 # Projekt-dokumentation
+└── README.md                 # Denne fil
+```
+
+## 🔒 Privatliv
+
+Writing Tools respekterer dit privatliv:
+- Indsamler eller gemmer ikke dine skrivedata
+- Sender kun tekst til Google's Gemini API, når du eksplicit bruger en funktion
+- API-nøgle gemmes lokalt på din enhed
+- Chat-historik kan gemmes lokalt (valgfrit) eller slettes, når vinduer lukkes
+- Alle data forbliver på din enhed, medmindre eksplicit sendt til AI
+
+Se [Google's Privatlivspolitik](https://policies.google.com/privacy) for information om data sendt til Gemini.
+
+## 🐞 Kendte Problemer
+
+1. **Hotkey virker ikke:** Prøv at skifte til `Ctrl+J` eller `Ctrl+\`` i indstillinger og genstart
+2. **Langsom første opstart:** Antivirus-software kan scanne den eksekverbare fil grundigt ved første kørsel
+
+## 🤝 Bidrag
+
+Vi modtager gerne bidrag til Writing Tools! Sådan kan du hjælpe:
+
+1. **Rapporter fejl:** Åbn et issue hvis du finder bugs eller problemer
+2. **Foreslå forbedringer:** Del dine idéer til nye funktioner
+3. **Send pull requests:** Bidrag med kode-forbedringer eller fejlrettelser
+4. **Forbedre dokumentation:** Hjælp med at gøre dokumentationen bedre
+
+**Forventninger til kodekvalitet:**
+- Følg eksisterende kodestil og konventioner
+- Test dine ændringer grundigt
+- Inkluder relevante kommentarer hvor nødvendigt
+
+## 📄 Licens
+
+**[LICENS MANGLER - SKAL TILFØJES]**
+
+Dette projekt mangler i øjeblikket en licens. Det anbefales at tilføje en MIT eller Apache 2.0 licens for at specificere, hvordan andre må bruge koden.
+
+## 📞 Kontakt
+
+For spørgsmål eller support:
+- **GitHub Issues:** [Opret et issue](../../issues) for fejlrapporter eller funktionsanmodninger
+- **Projektvedligeholder:** [TILFØJ KONTAKTINFORMATION HER]
+
+---
+
+**Lavet af Mikkel** • Drevet af Google Gemini AI • Inspireret af Apple Intelligence • Oprindeligt baseret på [theJayTea/WritingTools](https://github.com/theJayTea/WritingTools)
