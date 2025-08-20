@@ -1,4 +1,4 @@
-# Writing Tools (Gemini Edition)
+# WriteBoost
 
 [![Python](https://img.shields.io/badge/python-v3.8+-blue.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![Qt](https://img.shields.io/badge/Qt-PySide6-41CD52?style=for-the-badge&logo=qt&logoColor=white)](https://www.qt.io/)
@@ -8,12 +8,12 @@
 
 **AI-drevet skriveasssistent til Windows - optimér dit skriveri overalt på systemet**
 
-Writing Tools er en Apple Intelligence-inspireret applikation til Windows, der giver dig adgang til Google's Gemini AI overalt på dit system. Med et enkelt tastaturkombination kan du rette grammatik, omskrive tekst, opsummere indhold og meget mere - direkte i enhver applikation.
+WriteBoost er en Apple Intelligence-inspireret applikation til Windows, der giver dig adgang til Google's Gemini AI overalt på dit system. Med et enkelt tastaturkombination kan du rette grammatik, omskrive tekst, opsummere indhold og meget mere - direkte i enhver applikation.
 
-## ⚡ Hvad kan Writing Tools?
+## ⚡ Hvad kan WriteBoost?
 
 ### 🔧 Direkte Teksterstatning (Grå Knapper)
-- Vælg vilkårlig tekst på din PC og aktiver Writing Tools med `Ctrl+Space`
+- Vælg vilkårlig tekst på din PC og aktiver WriteBoost med `Ctrl+Space`
 - Vælg **Korrektur**, **Omskriv**, **Venlig**, **Professionel**, **Koncis**, **Brugerdefineret** eller **Oversæt til Dansk**
 - Din tekst erstattes øjeblikkeligt med den AI-optimerede version. Brug `Ctrl+Z` for at fortryde
 - **Visuelt Hint:** Grå knapper indikerer operationer, der erstatter tekst direkte
@@ -87,15 +87,15 @@ Dette projekt er bygget med følgende teknologier:
 
 ### MS Word-brugere
 `Ctrl+Space` kan konflikte med Word's "Ryd formatering". For at undgå dette:
-- Skift Writing Tools' hotkey til `Ctrl+J` eller `Ctrl+\`` i indstillinger
+- Skift WriteBoost' hotkey til `Ctrl+J` eller `Ctrl+\`` i indstillinger
 - Eller deaktiver Word's genvej i Word > Filer > Indstillinger > Tilpas bånd > Tastaturgenveje
 
-**Bemærk:** Word's rich-text-formatering (fed, kursiv, farver) går tabt ved brug af Writing Tools. Overvej at bruge en Markdown-editor som [Obsidian](https://obsidian.md/) for bedre kompatibilitet.
+**Bemærk:** Word's rich-text-formatering (fed, kursiv, farver) går tabt ved brug af WriteBoost. Overvej at bruge en Markdown-editor som [Obsidian](https://obsidian.md/) for bedre kompatibilitet.
 
 ### YouTube Video-resuméer
 1. Åbn en YouTube-video
 2. Kopiér transskriptionen fra videobeskrivelsen
-3. Vælg al tekst og brug Writing Tools "Resumé"
+3. Vælg al tekst og brug WriteBoost "Resumé"
 
 ## 🏗️ Bygning
 
@@ -125,7 +125,7 @@ Projektet er nu et selvstændigt værktøj med signifikant anderledes funktional
 ## 🗂️ Projektstruktur
 
 ```
-WritingTools - mka/
+WriteBoost/
 ├── Windows/                    # Hovedapplikation
 │   ├── main.py                # Indgangspunkt
 │   ├── WritingToolApp.py      # Hovedapplikation
@@ -144,7 +144,7 @@ WritingTools - mka/
 
 ## 🔒 Privatliv
 
-Writing Tools respekterer dit privatliv:
+WriteBoost respekterer dit privatliv:
 - Indsamler eller gemmer ikke dine skrivedata
 - Sender kun tekst til Google's Gemini API, når du eksplicit bruger en funktion
 - API-nøgle gemmes lokalt på din enhed
@@ -160,7 +160,7 @@ Se [Google's Privatlivspolitik](https://policies.google.com/privacy) for informa
 
 ## 🤝 Bidrag
 
-Vi modtager gerne bidrag til Writing Tools! Sådan kan du hjælpe:
+Vi modtager gerne bidrag til WriteBoost! Sådan kan du hjælpe:
 
 1. **Rapporter fejl:** Åbn et issue hvis du finder bugs eller problemer
 2. **Foreslå forbedringer:** Del dine idéer til nye funktioner
